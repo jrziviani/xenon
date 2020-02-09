@@ -23,6 +23,8 @@ add_compile_options("-z max-page-size=${MAX_PAGE_SIZE}")
 add_definitions("-DDEBUG")
 
 add_library(boot.o OBJECT arch/x86_64/boot.S)
+add_library(isr.o OBJECT arch/x86_64/isr.S)
+add_library(isrpp.o OBJECT arch/x86_64/isr.cpp)
 
 add_executable(kernel
                main.cpp)
@@ -31,7 +33,9 @@ set_target_properties(kernel PROPERTIES
                       LINK_FLAGS "-T ${LINKER_SCRIPT} ${LFLAGS}")
 
 target_link_libraries(kernel LINK_PUBLIC
-                      boot.o)
+                      boot.o
+                      isr.o
+                      isrpp.o)
 
 add_custom_command(TARGET kernel PRE_LINK
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
