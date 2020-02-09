@@ -142,6 +142,8 @@ buildit() {
     pushd build > /dev/null
     cmake --build $target $verbose
     popd > /dev/null
+
+    ln -s build/$target/compile_commands.json .
 }
 
 clean() {
