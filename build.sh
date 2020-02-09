@@ -151,6 +151,7 @@ clean() {
 
     local target="release"
     local verbose=""
+    local force=$3
     [[ $1 -eq 1 ]] && target="debug"
     [[ $2 -eq 1 ]] && verbose="--verbose"
 
@@ -159,7 +160,12 @@ clean() {
     then
         print_message "Target $target doesn't exist, exit"
     else
-        cmake --build $target --target clean $verbose
+        if [[ $force -eq 1 ]]
+        then
+            rm -fr $target
+        else
+            cmake --build $target --target clean $verbose
+        fi
     fi
 
     popd > /dev/null
@@ -187,18 +193,19 @@ qemuit() {
 }
 
 build() {
-    local qemu=$1
-    local test=$2
-    local clean=$3
-    local debug=$4
-    local build=$5
-    local cmake=$6
-    local infra=$7
-    local verbose=$8
-    local gdb=$9
+    local qemu=${1}
+    local test=${2}
+    local clean=${3}
+    local debug=${4}
+    local build=${5}
+    local cmake=${6}
+    local infra=${7}
+    local verbose=${8}
+    local gdb=${9}
+    local force=${10}
 
     [[ $infra -eq 1 ]] && config_cross_compiler
-    [[ $clean -eq 1 ]] && clean $debug $verbose
+    [[ $clean -eq 1 ]] && clean $debug $verbose $force
     [[ $cmake -eq 1 ]] && makeit $debug $verbose
     [[ $qemu -eq 1 ]]  && qemuit $debug $gdb
 }
@@ -213,6 +220,7 @@ main() {
     local build=0
     local cmake=0
     local infra=0
+    local force=0
     local verbose=0
 
     while [[ "$1" == --* ]]; do
@@ -241,6 +249,10 @@ main() {
                 gdb=1
                 ;;
 
+            -f|--force)
+                force=1
+                ;;
+
             -v|--verbose)
                 verbose=1
                 ;;
@@ -253,7 +265,7 @@ main() {
         esac
     done
 
-    build $qemu $test $clean $debug $build $cmake $infra $verbose $gdb
+    build $qemu $test $clean $debug $build $cmake $infra $verbose $gdb $force
 }
 
 main $@

@@ -1,5 +1,5 @@
 include_directories(arch/x86_64)
-include_directories(lib)
+include_directories(libs)
 include_directories(mm)
 
 set(MAX_PAGE_SIZE 0x1000)
