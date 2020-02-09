@@ -143,7 +143,7 @@ buildit() {
     cmake --build $target $verbose
     popd > /dev/null
 
-    ln -s build/$target/compile_commands.json .
+    ln -fs build/$target/compile_commands.json .
 }
 
 clean() {
