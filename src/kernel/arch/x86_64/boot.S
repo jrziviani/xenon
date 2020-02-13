@@ -254,7 +254,7 @@ _start64:
     movl %eax, %gs
 
     // set multiboot memory to higher address
-    addq $KVIRTUAL_ADDRESS, 0(%rdi)
+    addq $KVIRTUAL_ADDRESS, %rdi
 
     // free page 0
     movq $0x0, pml4
