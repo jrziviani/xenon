@@ -6,17 +6,19 @@ namespace __cxxabiv1
 
     extern "C"
     {
-        int __cxa_guard_acquire(guard_type *)
+        int __cxa_guard_acquire(guard_type *g)
         {
-            return 1;
+            return !(*g);
         }
 
-        void __cxa_guard_release(guard_type *)
+        void __cxa_guard_release(guard_type *g)
         {
+            *g = 1;
         }
 
-        void __cxa_guard_abort(guard_type *)
+        void __cxa_guard_abort(guard_type *g)
         {
+            (void)g;
         }
     }
 }

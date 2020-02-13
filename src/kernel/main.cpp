@@ -12,5 +12,6 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     (void)magic;
 
     logger::instance().log("Booting XenonOS");
+    logger::instance().log("Initializing IDT");
     init_idt();
 }
