@@ -225,7 +225,7 @@ main() {
     local force=0
     local verbose=0
 
-    while [[ "$1" == --* ]]; do
+    while [[ "$1" =~ -[a-z] || "$1" =~ --[a-z]+ ]]; do
         local opt="$1"
         shift
 
