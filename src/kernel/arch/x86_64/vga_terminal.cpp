@@ -67,6 +67,17 @@ namespace xenon
                     }
                     break;
 
+                case '\t':
+                    col_ += 4 - (col_ % 4);
+                    if (col_ > WIDTH) {
+                        lin_++;
+                        col_ = 0;
+                        if (lin_ > HEIGHT) {
+                            clear();
+                        }
+                    }
+                    break;
+
                 default:
                     printc(*s);
                     break;
