@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #include "vga_terminal.h"
@@ -41,12 +42,44 @@ namespace xenon
 
         int log(const char *format, ...)
         {
+            char buffer[64] = {0};
             va_list args;
-
             va_start(args, format);
-            term_.printf(format, args);
-            term_.printf("\n");
+
+            for (char c = *format; c != '\0'; c = *++format) {
+                if (c != '%') {
+                    term_.printc(c);
+                }
+                else {
+                    c = *++format;
+                    switch (c) {
+                        case 'd':
+                            itoa(buffer, 64, va_arg(args, int64_t));
+                            term_.prints(buffer);
+                            break;
+
+                        case 'x':
+                            itoa(buffer, 64, va_arg(args, int64_t), base::hex);
+                            term_.prints(buffer);
+                            break;
+
+                        case 'b':
+                            itoa(buffer, 64, va_arg(args, int64_t), base::bin);
+                            term_.prints(buffer);
+                            break;
+
+                        case 's':
+                            term_.prints(va_arg(args, const char*));
+                            break;
+
+                        default:
+                            term_.printc(c);
+                            break;
+                    }
+                }
+            }
             va_end(args);
+            term_.prints("\n");
 
             return 0;
         }
