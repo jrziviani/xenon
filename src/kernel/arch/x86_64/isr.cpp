@@ -1,5 +1,6 @@
 #include "isr.h"
 #include "instructions.h"
+#include "logger.h"
 
 namespace xenon
 {
@@ -11,11 +12,13 @@ namespace xenon
     void excpetion_handler(const regs &r)
     {
         (void)r;
+        logger::instance().log("[ Exception handler called ]");
     }
 
     void interrupt_handler(const regs &r)
     {
         (void)r;
+        logger::instance().log("[ IRQ handler called ]");
     }
 
     void irq_remap()
@@ -89,7 +92,10 @@ namespace xenon
         idt_set_gate(30, &rsB);
         idt_set_gate(31, &rsC);
 
+        logger::instance().log(" > Set all exception handlers");
+
         irq_remap();
+        logger::instance().log(" > IRQ remapped");
 
         idt_set_gate(32, &irq0);
         idt_set_gate(33, &irq1);
@@ -107,6 +113,7 @@ namespace xenon
         idt_set_gate(45, &irq13);
         idt_set_gate(46, &irq14);
         idt_set_gate(47, &irq15);
+        logger::instance().log(" > Set all IRQs");
 
         sti();
     }
