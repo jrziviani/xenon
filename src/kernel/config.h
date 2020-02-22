@@ -17,4 +17,6 @@
 #define X86_MSR_EFER_LME     (1 << 8)    /* Long mode enable */
 #define _EFER_LME            8
 
+#define MAX_ORDER            10
+
 #endif // CONFIG_H
