@@ -23,12 +23,14 @@ add_compile_options("-z max-page-size=${MAX_PAGE_SIZE}")
 add_definitions("-DDEBUG")
 
 add_library(boot.o OBJECT arch/x86_64/boot.S)
-add_library(crti.o OBJECT crti.S)
-add_library(crtn.o OBJECT crtn.S)
+
+add_library(crti.o OBJECT appendix/crti.S)
+add_library(crtn.o OBJECT appendix/crtn.S)
+add_library(icxxabi.o OBJECT appendix/icxxabi.cpp)
+add_library(cxa_guard.o OBJECT appendix/cxa_guard.cpp)
+
 add_library(isr.o OBJECT arch/x86_64/isr.S)
 add_library(isrpp.o OBJECT arch/x86_64/isr.cpp)
-add_library(cxa_guard.o OBJECT libs/cxa_guard.cpp)
-add_library(icxxabi.o OBJECT libs/icxxabi.cpp)
 add_library(vga_terminal.o OBJECT arch/x86_64/vga_terminal.cpp)
 
 add_executable(kernel
