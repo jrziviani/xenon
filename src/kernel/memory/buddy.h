@@ -11,7 +11,7 @@ namespace xenon
     {
         uint8_t free;
         uint8_t order;
-        uint8_t padding[48];
+        //uint8_t padding[48];
         uint64_t start;
     };
     using blocks = linked_list<block*>;
@@ -19,7 +19,9 @@ namespace xenon
 
     class buddy
     {
-        blocks[MAX_ORDER] free_list_;
+        uint64_t start_;
+        uint64_t end_;
+        blocks free_list_[MAX_ORDER];
 
     public:
         buddy(uint64_t start, uint64_t end);
@@ -33,7 +35,7 @@ namespace xenon
         block *get_buddy(block &dude);
 
         block *alloc_recursive(uint8_t order);
-        void free_recursive(block &blk);
+        void free_recursive(block *blk);
 
         void coalesce(uint8_t order);
     };

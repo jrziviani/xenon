@@ -33,7 +33,8 @@ add_library(isr.o OBJECT arch/x86_64/isr.S)
 add_library(isrpp.o OBJECT arch/x86_64/isr.cpp)
 add_library(vga_terminal.o OBJECT arch/x86_64/vga_terminal.cpp)
 
-add_library(linked_list.o OBJECT libs/linked_list.cpp)
+add_library(kmalloc.o OBJECT memory/kmalloc.cpp)
+add_library(buddy.o OBJECT memory/buddy.cpp)
 
 add_executable(kernel
                main.cpp)
@@ -47,7 +48,8 @@ target_link_libraries(kernel LINK_PUBLIC
                       isrpp.o
                       cxa_guard.o
                       icxxabi.o
-                      linked_list.o
+                      kmalloc.o
+                      buddy.o
                       vga_terminal.o)
 
 add_custom_command(TARGET kernel PRE_LINK
