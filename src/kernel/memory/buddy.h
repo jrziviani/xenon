@@ -16,15 +16,16 @@ namespace xenon
     };
     using blocks = linked_list<block*>;
 
-
     class buddy
     {
         uint64_t start_;
+        uint64_t len_;
         uint64_t end_;
         blocks free_list_[MAX_ORDER];
 
     public:
-        buddy(uint64_t start, uint64_t end);
+        buddy();
+        void set_addresses(uint64_t start, uint64_t len);
 
         void alloc_page(uint8_t order);
 
@@ -36,8 +37,6 @@ namespace xenon
 
         block *alloc_recursive(uint8_t order);
         void free_recursive(block *blk);
-
-        void coalesce(uint8_t order);
     };
 }
 

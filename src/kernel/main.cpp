@@ -4,6 +4,7 @@
 #include "config.h"
 #include "logger.h"
 #include "isr.h"
+#include "memory/manager.h"
 
 using namespace xenon;
 
@@ -23,4 +24,7 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     logger::instance().log("Initializing IDT");
     init_idt();
+
+    manager memory_manager;
+    memory_manager.init(bootinfo);
 }

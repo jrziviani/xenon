@@ -1,6 +1,7 @@
 #include "buddy.h"
 #include "kmalloc.h"
 #include "new.h"
+#include "libs/logger.h"
 
 namespace xenon
 {
@@ -17,10 +18,17 @@ namespace xenon
         4'096,      //   4KiB
     };
 
-    buddy::buddy(uint64_t start, uint64_t end) :
-        start_(start),
-        end_(end)
+    buddy::buddy()
     {
+    }
+
+    void buddy::set_addresses(uint64_t start, uint64_t len)
+    {
+        start_ = start;
+        len_ = len;
+        end_ = start_ + len_;
+
+        init();
     }
 
     void buddy::alloc_page(uint8_t order)
@@ -30,14 +38,18 @@ namespace xenon
 
     void buddy::init()
     {
-        uint64_t addresses = end_ - start_;
-        uint64_t total = addresses / ORDER_SIZES[MAX_ORDER - 1];
+        uint64_t total = len_ / ORDER_SIZES[MAX_ORDER - 1];
         uint32_t max_order_size = ORDER_SIZES[MAX_ORDER - 1];
+
+        logger::instance().log("total: %d - max_order_size: %d",
+                               total, max_order_size);
 
         for (uint8_t i = 0; i < total; i++) {
             uint64_t block_offset = i * max_order_size;
             block *blk = new block{1, MAX_ORDER - 1, start_ + block_offset};
+            /*
             free_list_[MAX_ORDER - 1].push_back(blk);
+            */
         }
     }
 
@@ -121,13 +133,6 @@ namespace xenon
         // buddy is not free, set only current block free
         else {
             blk->free = 1;
-        }
-    }
-
-    void buddy::coalesce(uint8_t order)
-    {
-        if (order < MAX_ORDER - 1) {
-            return;
         }
     }
 }

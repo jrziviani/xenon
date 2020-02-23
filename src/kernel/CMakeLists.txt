@@ -35,6 +35,7 @@ add_library(vga_terminal.o OBJECT arch/x86_64/vga_terminal.cpp)
 
 add_library(kmalloc.o OBJECT memory/kmalloc.cpp)
 add_library(buddy.o OBJECT memory/buddy.cpp)
+add_library(manager.o OBJECT memory/manager.cpp)
 
 add_executable(kernel
                main.cpp)
@@ -50,6 +51,7 @@ target_link_libraries(kernel LINK_PUBLIC
                       icxxabi.o
                       kmalloc.o
                       buddy.o
+                      manager.o
                       vga_terminal.o)
 
 add_custom_command(TARGET kernel PRE_LINK
