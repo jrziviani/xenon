@@ -45,6 +45,7 @@ namespace xenon
         void clear();
         void printc(char c);
         void prints(const char *s);
+        void prints(const char *s, char fill, unsigned int times);
         int printf(const char *format, ...);
 
         void column(uint8_t col)

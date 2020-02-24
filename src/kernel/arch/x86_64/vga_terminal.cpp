@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
 namespace xenon
 {
@@ -57,6 +58,15 @@ namespace xenon
 
     void vga_terminal::prints(const char *s)
     {
+        prints(s, ' ', 0);
+    }
+
+    void vga_terminal::prints(const char *s, char fill, unsigned int times)
+    {
+        for (auto len = strlen(s); len < times; len++) {
+            printc(fill);
+        }
+
         while (*s != '\0') {
             switch (*s) {
                 case '\n':
@@ -98,6 +108,14 @@ namespace xenon
             }
             else {
                 c = *++format;
+                unsigned int zeroes = 0;
+
+                while (isdigit(c)) {
+                    zeroes *= 10;
+                    zeroes += c - '0';
+                    c = *++format;
+                }
+
                 switch (c) {
                     case 'd':
                         itoa(buffer, 64, va_arg(args, int64_t));

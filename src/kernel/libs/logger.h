@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "vga_terminal.h"
 #include "singleton.h"
@@ -51,25 +52,33 @@ namespace xenon
                     term_.printc(c);
                 }
                 else {
+                    unsigned int width = 0;
                     c = *++format;
+
+                    while (isdigit(c)) {
+                        width *= 10;
+                        width += c - '0';
+                        c = *++format;
+                    }
+
                     switch (c) {
                         case 'd':
                             itoa(buffer, 64, va_arg(args, int64_t));
-                            term_.prints(buffer);
+                            term_.prints(buffer, '0', width);
                             break;
 
                         case 'x':
                             itoa(buffer, 64, va_arg(args, int64_t), base::hex);
-                            term_.prints(buffer);
+                            term_.prints(buffer, '0', width);
                             break;
 
                         case 'b':
                             itoa(buffer, 64, va_arg(args, int64_t), base::bin);
-                            term_.prints(buffer);
+                            term_.prints(buffer, '0', width);
                             break;
 
                         case 's':
-                            term_.prints(va_arg(args, const char*));
+                            term_.prints(va_arg(args, const char*), ' ', width);
                             break;
 
                         default:
