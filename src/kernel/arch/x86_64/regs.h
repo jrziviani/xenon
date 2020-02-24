@@ -7,6 +7,8 @@ namespace xenon
 {
     struct regs
     {
+        uint64_t ds;
+
         // general use registers
         uint64_t rax;
         uint64_t rbx;
@@ -24,8 +26,6 @@ namespace xenon
         uint64_t rbp;    // stack base pointer
         uint64_t rsi;    // source index
         uint64_t rdi;    // destination index
-
-        uint64_t ds;
     };
 
     struct fault

@@ -46,6 +46,11 @@ namespace xenon
     {
         asm volatile("cli" : : );
     }
+
+    inline void halt()
+    {
+        asm volatile("hlt" : : );
+    }
 }
 
 #endif // INSTRUCTIONS_H

@@ -6,24 +6,24 @@
     .type name,@function;   \
     name:
 
-#define ISR0(name, code)    \
+#define ISR0(name, num)     \
     FN_HEADER(name)         \
     cli;                    \
     push $0x0;              \
-    push $code;             \
+    push $num;              \
     jmp isr_handler
 
-#define ISR1(name, code, x) \
+#define ISR1(name, num, x)  \
     FN_HEADER(name)         \
     cli;                    \
-    push $code;             \
+    push $num;              \
     jmp isr_handler
 
-#define IRQ(code)           \
-    FN_HEADER(irq##code)    \
+#define IRQ(num)            \
+    FN_HEADER(irq##num)     \
     cli;                    \
     push $0x0;              \
-    push $code;             \
+    push $num;              \
     jmp irq_handler
 
 #define ISR_ADDR(name) &name
@@ -115,13 +115,14 @@ IRQ(15);
 .endm
 
 FN_HEADER(isr_handler)
+    mov $1, %r15
     save_context
 
     mov %ds, %ax
     push %rax
 
     mov %rsp, %rdi
-    call _ZN5xenon17excpetion_handlerERKNS_4regsE
+    call _ZN5xenon17excpetion_handlerERKNS_5faultE
 
     pop %rax
     mov %ax, %ds
@@ -138,7 +139,7 @@ FN_HEADER(irq_handler)
     push %rax
 
     mov %rsp, %rdi
-    call _ZN5xenon17interrupt_handlerERKNS_4regsE
+    call _ZN5xenon17interrupt_handlerERKNS_5faultE
 
     pop %rax
     mov %ax, %ds

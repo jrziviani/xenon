@@ -5,8 +5,11 @@
 
 namespace xenon
 {
-    void excpetion_handler(const regs &r);
-    void interrupt_handler(const regs &r);
+    void excpetion_handler(unsigned int code, const regs &r);
+    void interrupt_handler(unsigned int code, const regs &r);
+
+    template <typename F>
+    void register_handler(F &&fn);
 
     void init_idt();
 
