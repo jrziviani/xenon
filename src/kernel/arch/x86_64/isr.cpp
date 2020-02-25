@@ -49,17 +49,68 @@ namespace xenon
 
     void irq_remap()
     {
-        // remap the IRQ table
-        outb(0x20, 0x11);
-        outb(0xA0, 0x11);
-        outb(0x21, 0x20);
-        outb(0xA1, 0x28);
-        outb(0x21, 0x04);
-        outb(0xA1, 0x02);
-        outb(0x21, 0x01);
-        outb(0xA1, 0x01);
-        outb(0x21, 0x0);
-        outb(0xA1, 0x0);
+        // https://en.wikibooks.org/wiki/X86_Assembly/Programmable_Interrupt_Controller
+        // https://wiki.osdev.org/8259_PIC
+        //
+        // NOTE: Not sure if it's still required for modern APIC chips
+        //
+        // this function will remaps the interrupt numbers these IRQs sends to
+        // CPU to avoid conflicts between HW and SW interrupts, because low 32
+        // interrupts are used for exceptions (page fault, div 0, etc).
+        // PIC1 will issue IRQ OFFSET_PIC1 .. OFFSET_PIC1 + 7
+        // PIC2 will issue IRQ OFFSET_PIC2 .. OFFSET_PIC2 + 7
+        const int OFFSET_PIC1 = 0x20;
+        const int OFFSET_PIC2 = 0x28;
+
+        // PIC interrupt controllers
+        const int PIC1_COMM = 0x20;
+        const int PIC1_DATA = 0x21;
+        const int PIC2_COMM = 0xA0;
+        const int PIC2_DATA = 0xA1;
+
+        // ICWs (initialization Command Word)
+        const int ICW1_INIT = 0x11; // INIT, cascade mode, ICW4 required
+        const int ICW4_8086 = 0x01;
+
+        // save masks
+        auto a1 = inb(PIC1_DATA);
+        auto a2 = inb(PIC2_DATA);
+
+        // ICW1: to PIC1 and PIC2. In the initialization mode, 8259A will
+        // wait for 3 ICWs
+        outb(PIC1_COMM, ICW1_INIT);
+        outb(PIC2_COMM, ICW1_INIT);
+
+        // ICW2: to PIC1 and PIC2, setting the vector offset for each.
+        // PIC1 -> 0x20 and PIC2 -> 0x28.
+        outb(PIC1_DATA, OFFSET_PIC1);
+        outb(PIC2_DATA, OFFSET_PIC2);
+        //
+        // ICW3: Tell master (PIC1) there's slave PIC at IRQ2 (starts 0)
+        //       Tell slave (PIC2) its cascade identity number (2 here)
+        outb(PIC1_DATA, 0x04);
+        outb(PIC2_DATA, 0x02);
+
+        // ICW4: set 8086 mode
+        outb(PIC1_DATA, ICW4_8086);
+        outb(PIC2_DATA, ICW4_8086);
+
+        // restore saved masks
+        outb(PIC1_DATA, a1);
+        outb(PIC2_DATA, a2);
+
+        /*
+        outb(PIC1_DATA, 0x04); = 0b00000100
+        outb(PIC2_DATA, 0x02);     |
+                            +------+  +-------...
+                   +--------V--+      | 8295A
+      -------+     | 8259A  0 0|      | Slave
+       80x86 |     | Master 0 1|      |
+             |     |        1 2|<----+| intr
+             |<----+ intr   0 3|      | id 2
+             |     |        0 4|      |
+            ...   ...         ...    ...
+        */
     }
 
     void idt_set_gate(uint8_t gate, void (*fn)())
