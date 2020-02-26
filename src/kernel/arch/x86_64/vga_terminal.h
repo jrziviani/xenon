@@ -1,7 +1,7 @@
 #ifndef VGA_TERMINAL_H
 #define VGA_TERMINAL_H
 
-#include <stdint.h>
+#include <klib/stdint.h>
 
 namespace xenon
 {

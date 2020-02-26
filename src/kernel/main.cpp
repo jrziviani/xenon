@@ -1,9 +1,11 @@
-#include <stdint.h>
-#include <multiboot.h>
+#include <klib/stdint.h>
+#include <klib/multiboot.h>
+#include <klib/logger.h>
+
+// TODO: this dependency shouldn't exist
+#include <arch/x86_64/isr.h>
 
 #include "config.h"
-#include "logger.h"
-#include "isr.h"
 
 using namespace xenon;
 

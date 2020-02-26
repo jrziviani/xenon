@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <klib/stdint.h>
 
 namespace __cxxabiv1
 {

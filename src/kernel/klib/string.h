@@ -1,7 +1,7 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include "stdint.h"
+#include <klib/stdint.h>
 
 inline size_t strlen(const char *s)
 {

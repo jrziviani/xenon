@@ -1,13 +1,14 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <stdint.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
+#include <klib/stdint.h>
+#include <klib/stdlib.h>
+#include <klib/string.h>
+#include <klib/singleton.h>
 
-#include "vga_terminal.h"
-#include "singleton.h"
+// TODO: this dep shouldn't exist...
+#include <arch/x86_64/vga_terminal.h>
 
 namespace xenon
 {

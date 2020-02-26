@@ -1,6 +1,8 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
+#include <klib/stdint.h>
+
 namespace xenon
 {
     inline void outb(uint16_t port, uint8_t val)
@@ -10,7 +12,7 @@ namespace xenon
                      : "dN"(port), "a"(val));
     }
 
-    inline uint8_t inb(uint8_t port)
+    inline uint8_t inb(uint16_t port)
     {
         uint8_t ret;
         asm volatile("inb %1, %0"

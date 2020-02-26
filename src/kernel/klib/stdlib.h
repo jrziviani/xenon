@@ -1,7 +1,7 @@
 #ifndef STDLIB_H
 #define STDLIB_H
 
-#include "stdint.h"
+#include <klib/stdint.h>
 
 enum base
 {

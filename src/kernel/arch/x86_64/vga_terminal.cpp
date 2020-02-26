@@ -2,8 +2,8 @@
 #include "config.h"
 
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+#include <klib/stdlib.h>
+#include <klib/string.h>
 
 namespace xenon
 {

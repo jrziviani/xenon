@@ -1,7 +1,7 @@
 #ifndef REGS_H
 #define REGS_H
 
-#include <stdint.h>
+#include <klib/stdint.h>
 
 namespace xenon
 {

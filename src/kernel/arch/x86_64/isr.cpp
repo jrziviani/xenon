@@ -1,6 +1,7 @@
+#include <klib/logger.h>
+
 #include "isr.h"
 #include "instructions.h"
-#include "logger.h"
 
 namespace xenon
 {
