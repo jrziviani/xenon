@@ -123,7 +123,7 @@ makeit() {
 
     mkdir -p build
     pushd build > /dev/null
-    cmake -H.. -B$target -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -GNinja
+    cmake -H.. -B$target -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     popd > /dev/null
 
     buildit $1 $2

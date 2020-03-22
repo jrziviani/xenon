@@ -20,7 +20,7 @@ target_link_libraries(kernel LINK_PUBLIC
 add_custom_command(TARGET kernel PRE_LINK
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                    COMMAND ${CMAKE_COMMAND} -E echo "Copying LD script"
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/src/kernel/arch/x86_64/kernel.ld .)
+                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/src/kernel/arch/x86_64/kernel.ld ./src/kernel)
 
 add_custom_command(TARGET kernel POST_BUILD
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -28,7 +28,7 @@ add_custom_command(TARGET kernel POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E make_directory iso/boot/grub
                    COMMAND ${CMAKE_COMMAND} -E copy src/kernel/kernel iso/boot
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/contrib/grub.cfg iso/boot/grub
-                   COMMAND grub2-mkrescue -o xenon.iso iso > /dev/null 2>&1
+                   COMMAND ${GRUBRESCUE} -o xenon.iso iso > /dev/null 2>&1
                    COMMAND ${CMAKE_COMMAND} -E remove_directory iso
                    COMMAND ${CMAKE_COMMAND} -E echo "Finished")
 
