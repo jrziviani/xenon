@@ -43,17 +43,17 @@ config_cross_compiler() {
         pushd tmp
             if [[ ! -f .binutils ]]
             then
-                if [[ ! -f binutils-2.33.1.tar.xz ]]
+                if [[ ! -f binutils-2.34.tar.xz ]]
                 then
                     print_message "Downloading binutils"
-                    curl -O https://ftp.gnu.org/gnu/binutils/binutils-2.33.1.tar.xz
+                    curl -O https://ftp.gnu.org/gnu/binutils/binutils-2.34.tar.xz
                 fi
 
                 print_message "Building binutils"
-                tar xf binutils-2.33.1.tar.xz
+                tar xf binutils-2.34.tar.xz
                 mkdir -p build-binutils
                 pushd build-binutils
-                    ../binutils-2.33.1/configure \
+                    ../binutils-2.34/configure \
                         --target=x86_64-elf \
                         --prefix="$cpath" \
                         --with-sysroot \
@@ -64,21 +64,21 @@ config_cross_compiler() {
                     make install
                 popd # build-binutils
                 touch .binutils
-                rm binutils-2.33.1.tar.xz
+                rm binutils-2.34.tar.xz
             fi
 
             if [[ ! -f .gcc ]]
             then
-                if [[ ! -f gcc-9.2.0.tar.xz ]]
+                if [[ ! -f gcc-9.3.0.tar.xz ]]
                 then
                     print_message "Downloading gcc"
-                    curl -O https://ftp.gnu.org/gnu/gcc/gcc-9.2.0/gcc-9.2.0.tar.xz
+                    curl -O https://ftp.gnu.org/gnu/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz
                 fi
 
                 print_message "Building gcc"
-                tar xf gcc-9.2.0.tar.xz
-                cp "$contrib/t-x86_64-elf" gcc-9.2.0/gcc/config/i386/
-                cp "$contrib/config.gcc" gcc-9.2.0/gcc/
+                tar xf gcc-9.3.0.tar.xz
+                # cp "$contrib/t-x86_64-elf" gcc-9.3.0/gcc/config/i386/
+                # cp "$contrib/config.gcc" gcc-9.3.0/gcc/
 
                 export "LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH"
 
@@ -86,7 +86,7 @@ config_cross_compiler() {
                 pushd build-gcc
                     export PATH="$PATH:$cpath/bin"
                     export TARGET=x86_64-elf
-                    ../gcc-9.2.0/configure \
+                    ../gcc-9.3.0/configure \
                         --target=x86_64-elf \
                         --prefix="$cpath" \
                         --disable-nls \
@@ -94,12 +94,12 @@ config_cross_compiler() {
                         --without-headers
 
                     make -j $(nproc) all-gcc
-                    make -j $(nproc) all-target-libgcc
+                    make -j $(nproc) all-target-libgcc CFLAGS_FOR_TARGET='-O2 -mcmodel=large -mno-red-zone'
                     make install-gcc
                     make install-target-libgcc
                 popd # build-gcc
                 touch .gcc
-                rm gcc-9.2.0.tar.xz
+                rm gcc-9.3.0.tar.xz
             fi
         popd # tmp
 
@@ -194,6 +194,27 @@ qemuit() {
     popd > /dev/null
 }
 
+bochsit() {
+    print_header "Running BOCHS"
+
+    [[ -d build ]] || die "build dir doesn't exist" 1
+
+    local target="release"
+    local bochs="bochs"
+    [[ $1 -eq 1 ]] && target="debug"
+    [[ $2 -eq 1 ]] && bochs="bochs-debugger"
+
+    pushd build > /dev/null
+    if [[ ! -d $target ]]
+    then
+        print_message "Target $target doesn't exist, exit"
+    else
+        cmake --build $target --target $bochs
+    fi
+
+    popd > /dev/null
+}
+
 build() {
     local qemu=${1}
     local test=${2}
@@ -204,12 +225,14 @@ build() {
     local infra=${7}
     local verbose=${8}
     local gdb=${9}
-    local force=${10}
+    local bochs=${10}
+    local force=${11}
 
     [[ $infra -eq 1 ]] && config_cross_compiler
     [[ $clean -eq 1 ]] && clean $debug $verbose $force
     [[ $cmake -eq 1 ]] && makeit $debug $verbose
     [[ $qemu -eq 1 ]]  && qemuit $debug $gdb
+    [[ $bochs -eq 1 ]]  && bochsit $debug $gdb
 }
 
 main() {
@@ -222,6 +245,7 @@ main() {
     local build=0
     local cmake=0
     local infra=0
+    local bochs=0
     local force=0
     local verbose=0
 
@@ -251,6 +275,10 @@ main() {
                 gdb=1
                 ;;
 
+            -x|--bochs)
+                bochs=1
+                ;;
+
             -f|--force)
                 force=1
                 ;;
@@ -267,7 +295,9 @@ main() {
         esac
     done
 
-    build $qemu $test $clean $debug $build $cmake $infra $verbose $gdb $force
+    [[ $qemu == 1 ]] && bochs=0
+
+    build $qemu $test $clean $debug $build $cmake $infra $verbose $gdb $bochs $force
 }
 
 main $@

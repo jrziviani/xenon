@@ -39,6 +39,25 @@ namespace xenon
                      : "r"(idt));
     }
 
+    inline void lgdt(uint64_t gdt)
+    {
+        asm volatile("lgdt (%0)"
+                     :
+                     : "r"(gdt));
+
+    }
+
+    inline void init_segments(uint64_t value)
+    {
+        asm volatile("movq %0, %%ds \t\n \
+                      movq %0, %%es \t\n \
+                      movq %0, %%ss \t\n \
+                      movq %0, %%fs \t\n \
+                      movq %0, %%gs \t\n"
+                      :
+                      : "r"(value));
+    }
+
     inline void sti()
     {
         asm volatile("sti" : : );

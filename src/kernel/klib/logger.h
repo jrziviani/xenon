@@ -8,7 +8,7 @@
 #include <klib/singleton.h>
 
 // TODO: this dep shouldn't exist...
-#include <arch/x86_64/vga_terminal.h>
+#include <arch/x86_64/video/vga_terminal.h>
 
 namespace xenon
 {

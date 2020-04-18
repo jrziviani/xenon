@@ -13,4 +13,6 @@ using uint64_t      = unsigned long int;
 using size_t        = uint64_t;
 using uintptr_t     = unsigned long int;
 
+using pid_t         = int;
+
 #endif // STDINT_H

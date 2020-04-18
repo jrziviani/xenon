@@ -2,10 +2,11 @@ include_directories(klib)
 
 add_subdirectory(appendix)
 add_subdirectory(arch)
+add_subdirectory(memory)
 
 set(MAX_PAGE_SIZE 0x1000)
 set(LINKER_SCRIPT "kernel.ld")
-set(LFLAGS "-fno-PIC -fno-pie -mno-red-zone -mcmodel=kernel -nostdlib -lgcc -Wl,-z,max-page-size=${MAX_PAGE_SIZE}")
+set(LFLAGS "-fno-PIC -fno-pie -fno-exceptions -fno-rtti -mno-red-zone -mcmodel=kernel -nostdlib -lgcc -Wl,-z,max-page-size=${MAX_PAGE_SIZE}")
 
 add_executable(kernel
                main.cpp)
@@ -15,6 +16,7 @@ set_target_properties(kernel PROPERTIES
 
 target_link_libraries(kernel LINK_PUBLIC
                       x86_64.o
+                      memory.o
                       appendix.o)
 
 add_custom_command(TARGET kernel PRE_LINK
@@ -34,7 +36,13 @@ add_custom_command(TARGET kernel POST_BUILD
 
 add_custom_target(qemu
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                  COMMAND qemu-system-x86_64 -m 1G -cdrom xenon.iso
+                  COMMAND qemu-system-x86_64
+                      -m 1G
+                      -machine q35,accel=tcg
+                      -cdrom xenon.iso
+                      -d cpu_reset
+                      -no-shutdown
+                      -monitor unix:qemu-monitor-socket,server,nowait
                   DEPENDS kernel)
 
 add_custom_target(qemu-debug
@@ -42,4 +50,16 @@ add_custom_target(qemu-debug
                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/contrib/gdbinit .gdbinit
                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/contrib/debug.sh debug.sh
                   COMMAND ./debug.sh ${CMAKE_BINARY_DIR}
+                  DEPENDS kernel)
+
+add_custom_target(bochs
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/contrib/bochsrc.txt bochsrc.txt
+                  COMMAND bochs -f bochsrc.txt -q
+                  DEPENDS kernel)
+
+add_custom_target(bochs-debugger
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/contrib/bochsrc.txt bochsrc.txt
+                  COMMAND bochs-debugger -f bochsrc.txt -q
                   DEPENDS kernel)

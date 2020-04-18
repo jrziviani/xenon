@@ -11,6 +11,7 @@ add_compile_options("-fno-rtti")
 add_compile_options("-fno-PIC")
 add_compile_options("-fno-pie")
 add_compile_options("-fno-exceptions")
+add_compile_options("-fno-unwind-tables")
 add_compile_options("-z max-page-size=${MAX_PAGE_SIZE}")
 
 add_definitions("-DDEBUG")

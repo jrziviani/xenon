@@ -1,6 +1,6 @@
 OUTPUT_FORMAT(elf64-x86-64)
 
-KERNEL_LMA = 0x1000;
+KERNEL_LMA = 0x100000;
 KERNEL_VMA = 0xffffffff80000000;
 
 ENTRY(_start32)
@@ -38,13 +38,6 @@ SECTIONS
     .data ALIGN (4K) : AT(ADDR(.data) - KERNEL_VMA)
     {
         *(.data)
-    }
-
-    .pgtable ALIGN (4K) : AT(ADDR(.pgtable) - KERNEL_VMA)
-    {
-        _pgtable = .;
-        *(.pgtable)
-        _epgtable = .;
     }
 
     .eh_frame : AT(ADDR(.eh_frame) - KERNEL_VMA) {

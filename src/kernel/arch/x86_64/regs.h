@@ -40,6 +40,17 @@ namespace xenon
         uint64_t userrsp;
         uint64_t ss;
     };
+
+    struct context
+    {
+        uint64_t rdx;
+
+        uint64_t rbp;
+        uint64_t rsi;
+        uint64_t rdi;
+
+        uint64_t rip;
+    };
 }
 
 #endif // REGS_H

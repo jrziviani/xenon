@@ -85,7 +85,6 @@ pml4:
     .quad pdpt - KVIRTUAL_ADDRESS + 0x3
 
 // each entry maps up to 1GiB. Total is 512 * 1GiB = 512GiB
-.globl pdpt
 pdpt:
     // maps from 0x0 to 0x3fffffff [1 GiB]
     .quad pde - KVIRTUAL_ADDRESS + 0x3
@@ -102,8 +101,11 @@ pde:
     .quad pte_2M - KVIRTUAL_ADDRESS + 0x3
     // maps from 0x200000 [2MiB] to 0x3fffff [4MiB]
     .quad pte_4M - KVIRTUAL_ADDRESS + 0x3
+
+    .quad pte_6M - KVIRTUAL_ADDRESS + 0x3
+    .quad pte_8M - KVIRTUAL_ADDRESS + 0x3
     // fill the rest with zeroes
-    .fill 510, 8, 0
+    .fill 508, 8, 0
 
 // each entry maps 4KiB. Total is 4KiB * 512 = 2MiB
 pte_2M:
@@ -114,36 +116,58 @@ pte_4M:
     // reserve 512 * 8bytes = 4KiB for page table
     .fill 512, 8, 0
 
+pte_6M:
+    // reserve 512 * 8bytes = 4KiB for page table
+    .fill 512, 8, 0
+
+pte_8M:
+    // reserve 512 * 8bytes = 4KiB for page table
+    .fill 512, 8, 0
+
+ptes:
+    // reserve more 510 tables of 4KiB = 2040KiB
+    .fill 260096, 8, 0
+
+pte_end:
+    .fill 4096, 8, 0
+
 /*****************************************************
  * GDT table entry
  ****************************************************/
 .section ".rodata","a"
-.align 16
+.align 4
 gdt64:
     // NULL SEGMENT (must exist)
     .quad 0x0000000000000000
 
+gdt64_code:
     // CODE SEGMENT
     .quad (1<<53) | (1<<47) | (1<<44) | (1<<43) | (1<<41)
+    //.quad 0x00af9a000000ffff
     //       |         |         |         |         +- readable
     //       |         |         |         +- code segment
     //       |         |         +- must be 1
     //       |         +- present
     //       +- 64-bit
 
+gdt64_data:
     // DATA SEGMENT
-    .quad (1<<53) | (1<<47) | (1<<44) | (0<<43) | (1<<41)
+    // .quad (1<<53) | (1<<47) | (1<<44) | (0<<43) | (1<<41)
+    //.quad 0x00cf92000000ffff
     //       |         |         |         |         +- writeable
     //       |         |         |         +- data segment
     //       |         |         +- must be 1
     //       |         +- present
     //       +- 64-bit
+
+    // TSS
+    //.quad 0x0000000000000000
+    //.quad 0x0000000000000000
 gdt64_end:
 
 // GDT header
-.align 16
 init_gdt64_ptr:
-    .word gdt64_end - gdt64
+    .word gdt64_end - gdt64 - 1
     .long gdt64 - KVIRTUAL_ADDRESS
 
 /*****************************************************
@@ -183,25 +207,15 @@ _start32:
     movl %edx, %esi
     movl %ebx, %edi
 
-    // fill the first 2MiB page table entries
-    movl $512, %eax
+    // fill the first 8MiB page table entries
+    movl $2048, %eax
     movl $(pte_2M - KVIRTUAL_ADDRESS), %ebx
-    movl $0x3, %ecx // 0x3 => page is R/W and present
+    movl $0x7, %ecx // 0x3 => page is R/W and present
 1:  movl %ecx, 0(%ebx)
     addl $4096, %ecx
     addl $8, %ebx
     decl %eax
     jnz 1b
-
-    // fill the next 2MiB (total 4MiB) page table entries
-    movl $512, %eax
-    movl $(pte_4M - KVIRTUAL_ADDRESS), %ebx
-    movl $0x3, %ecx // 0x3 => page is R/W and present
-2:  movl %ecx, 0(%ebx)
-    addl $4096, %ecx
-    addl $8, %ebx
-    decl %eax
-    jnz 2b
 
     // set PAE (physical address extension)
     movl %cr4, %eax
@@ -225,7 +239,7 @@ _start32:
     movl %eax, %cr0
 
     // jump to the flat code segment to enable paging
-    ljmp $0x08, $(trampoline64 - KVIRTUAL_ADDRESS)
+    ljmp $0x8, $(trampoline64 - KVIRTUAL_ADDRESS)
 
 .code64
 .globl _start64
@@ -238,27 +252,27 @@ trampoline64:
     jmp *%rax
 
 _start64:
-    movq $KVIRTUAL_ADDRESS, %rax
-    addq %rax, %rsp
-
-    //addq $KERNEL_VMA, %rdi
+    // setup a stack
+    movq $bootstack, %rbp
+    movq %rbp, %rsp
 
     // zero data segments
     // CS: L(ong), D(efault oper. size) and DPL attributes
     // are used in 64-bit mode
-    xorl %eax, %eax
-    movl %eax, %ds
-    movl %eax, %es
-    movl %eax, %ss
-    movl %eax, %fs
-    movl %eax, %gs
+    movq $0, %rax
+    movq %rax, %ds
+    movq %rax, %es
+    movq %rax, %ss
+    movq %rax, %fs
+    movq %rax, %gs
 
     // set multiboot memory to higher address
     addq $KVIRTUAL_ADDRESS, %rdi
 
-    // free page 0
+    // unmap page 0
+    movq $0x0, pdpt
     movq $0x0, pml4
-    invlpg 0
+    invlpg pml4
 
     // finally go to C++
     call _Z5kmainP14multiboot_infom
@@ -269,5 +283,5 @@ _start64:
 
 .section .bss
 .balign 4096
-    .fill 0x1000, 1, 0
+    .fill 0x10000, 1, 0
 bootstack:

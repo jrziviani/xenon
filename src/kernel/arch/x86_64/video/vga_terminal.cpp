@@ -30,7 +30,7 @@ namespace xenon
         auto videobuf = reinterpret_cast<uint16_t*>(VGA_VIRTUAL_ADDRESS);
         for (size_t y = 0; y < HEIGHT; y++) {
             for (size_t x = 0; x < WIDTH; x++) {
-                videobuf[y * WIDTH + x] = 'X' | 1 << 8;
+                videobuf[y * WIDTH + x] = ' ' | 1 << 8;
             }
         }
 
