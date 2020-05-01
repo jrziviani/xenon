@@ -47,15 +47,52 @@ namespace xenon
 
     }
 
-    inline void init_segments(uint64_t value)
+    inline uintptr_t movfrsp()
     {
-        asm volatile("movq %0, %%ds \t\n \
-                      movq %0, %%es \t\n \
-                      movq %0, %%ss \t\n \
-                      movq %0, %%fs \t\n \
-                      movq %0, %%gs \t\n"
-                      :
-                      : "r"(value));
+        uint64_t rsp;
+        asm volatile ("mov %%rsp, %0"
+                      : "=r"(rsp));
+        return rsp;
+    }
+
+    inline uintptr_t movfrbp()
+    {
+        uint64_t rbp;
+        asm volatile ("mov %%rbp, %0"
+                      : "=r"(rbp));
+        return rbp;
+    }
+
+    inline uintptr_t movfrip()
+    {
+        uint64_t rip;
+        asm volatile ("lea (%%rip), %0"
+                      : "=r"(rip));
+        return rip;
+    }
+
+    inline paddr_t get_current_page()
+    {
+        uintptr_t cr3;
+        asm volatile("mov %%cr3, %0"
+                     : "=r"(cr3));
+
+        return ptr_to<paddr_t>(cr3);
+    }
+
+    inline void tlb_flush(paddr_t addr)
+    {
+        asm volatile("invlpg (%0)"
+                     :
+                     : "r"(ptr_from(addr))
+                     : "memory");
+    }
+
+    inline void switch_page(uintptr_t addr)
+    {
+        asm volatile("mov %0, %%cr3"
+                     :
+                     : "r"(addr));
     }
 
     inline void sti()

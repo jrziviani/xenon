@@ -12,7 +12,21 @@ using uint64_t      = unsigned long int;
 
 using size_t        = uint64_t;
 using uintptr_t     = unsigned long int;
+using vaddr_t       = void*;
+using paddr_t       = void*;
 
 using pid_t         = int;
+
+template <typename T>
+inline T ptr_to(uintptr_t addr)
+{
+    return reinterpret_cast<T>(addr);
+}
+
+template <typename T>
+inline uintptr_t ptr_from(T addr)
+{
+    return reinterpret_cast<uintptr_t>(addr);
+}
 
 #endif // STDINT_H

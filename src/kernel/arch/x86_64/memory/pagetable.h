@@ -64,31 +64,6 @@ namespace xenon
     struct pml4_t {
         uintptr_t dirs[512];
     };
-
-    class page_t
-    {
-        uintptr_t *kernel_pages_;
-        pml4_t *kernel_directory_;
-
-    private:
-        pte_t *get_page(uintptr_t top_dir, uintptr_t vaddr, bool make);
-
-        uintptr_t vaddr_to_paddr(uintptr_t vaddr);
-
-    public:
-        page_t();
-
-        void unmap(uintptr_t top_dir, void *vaddr);
-
-        int map(uintptr_t top_dir,
-                void *vaddr,
-                uint64_t paddr,
-                uint8_t flags);
-
-        int map(void *vaddr,
-                uint64_t paddr,
-                uint8_t flags);
-    };
 }
 
 #endif // PAGETABLE_H

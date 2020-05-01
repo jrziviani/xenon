@@ -32,24 +32,13 @@ namespace xenon
     {
         regs registers;
 
-        uint64_t error_no;
+        uint64_t int_no;
         uint64_t error_code;
         uint64_t rip;
         uint64_t cs;
         uint64_t rflags;
         uint64_t userrsp;
         uint64_t ss;
-    };
-
-    struct context
-    {
-        uint64_t rdx;
-
-        uint64_t rbp;
-        uint64_t rsi;
-        uint64_t rdi;
-
-        uint64_t rip;
     };
 }
 

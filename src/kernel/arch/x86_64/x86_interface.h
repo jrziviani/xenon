@@ -3,6 +3,8 @@
 
 #include "arch_interface.h"
 
+#include <memory/context.h>
+#include <klib/timer.h>
 #include <klib/logger.h>
 
 namespace xenon
@@ -12,6 +14,8 @@ namespace xenon
     public:
         int init_interrupts() final;
         int init_paging()     final;
+        int init_timer()      final;
+        int create_context()  final;
     };
 }
 

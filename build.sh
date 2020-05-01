@@ -233,6 +233,8 @@ build() {
     [[ $cmake -eq 1 ]] && makeit $debug $verbose
     [[ $qemu -eq 1 ]]  && qemuit $debug $gdb
     [[ $bochs -eq 1 ]]  && bochsit $debug $gdb
+
+    return 0
 }
 
 main() {

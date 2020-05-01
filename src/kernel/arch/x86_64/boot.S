@@ -278,6 +278,7 @@ _start64:
     call _Z5kmainP14multiboot_infom
 
     // unexpected :-(
+    cli
 1:  hlt
     jmp 1b
 

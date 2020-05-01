@@ -5,6 +5,7 @@ add_library(x86_64.o OBJECT boot.S
                             isr.S
                             gdt.S
                             x86_interface.cpp
+                            x86_timer.cpp
                             exception.cpp
                             segments.cpp)
 

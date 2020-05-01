@@ -23,6 +23,12 @@ namespace xenon
         return placement_kalloc(size, &tmp);
     }
 
+    uintptr_t *placement_kalloc(size_t size, uintptr_t *paddr, bool align)
+    {
+        __placement = ALIGN_UP(__placement);
+        return placement_kalloc(size, paddr);
+    }
+
     void kfree_block(size_t size)
     {
         __placement -= size;

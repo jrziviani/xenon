@@ -1,7 +1,7 @@
 #ifndef NEW_H
 #define NEW_H
 
-#include "stdint.h"
+#include "klib/stdint.h"
 
 inline void *operator new(size_t, void *p) noexcept
 {
@@ -22,6 +22,10 @@ inline void operator delete[](void*, void*) noexcept
 }
 
 inline void operator delete(void*, unsigned long) noexcept
+{
+}
+
+inline void operator delete(void*) noexcept
 {
 }
 

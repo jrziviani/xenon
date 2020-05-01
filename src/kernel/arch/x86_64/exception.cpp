@@ -1,8 +1,12 @@
 #include "exception.h"
 #include "instructions.h"
 
+const uint8_t MAX_INTERRUPT_HANDLERS = 16;
+
 namespace xenon
 {
+    xenon_base *interrupt_handlers[MAX_INTERRUPT_HANDLERS];
+
     void print_registers(const regs &r)
     {
         logger::instance().log("Registers ----------");
@@ -19,7 +23,7 @@ namespace xenon
     void excpetion_handler(const fault &r)
     {
         logger::instance().log("[ Exception handler called ]");
-        logger::instance().log("ERROR: %d, ERROR CODE: 0b%5b", r.error_no, r.error_code);
+        logger::instance().log("ERROR: %d, ERROR CODE: 0b%5b", r.int_no, r.error_code);
         logger::instance().log("    RIP: 0x%16x", r.rip);
         logger::instance().log(" RFLAGS: 0x%16x", r.rflags);
         logger::instance().log("USERRSP: 0x%16x", r.userrsp);
@@ -37,7 +41,42 @@ namespace xenon
 
     void interrupt_handler(const fault &r)
     {
-        (void)r;
-        logger::instance().log("[ IRQ handler called ]");
+        if (r.int_no >= 40) {
+            outb(0xa0, 0x20);
+        }
+        outb(0x20, 0x20);
+
+        if (interrupt_handlers[r.int_no] == 0) {
+            //logger::instance().log("DEBUG: No handler to IRQ#%d", r.int_no);
+            return;
+        }
+
+        switch (r.int_no) {
+            case 0: // timer
+                interrupt_handlers[0]->on_time(0);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    void assign_irq(uint8_t irq, xenon_base *handler)
+    {
+        if (irq > 15) {
+            logger::instance().log("PANIC: Invalid IRQ %d", irq);
+            return;
+        }
+
+        cli();
+        interrupt_handlers[irq] = handler;
+        sti();
+    }
+
+    void unassign_irq(uint8_t irq)
+    {
+        cli();
+        interrupt_handlers[irq] = nullptr;
+        sti();
     }
 }

@@ -7,7 +7,7 @@
 /*
  * Constants
  */
-const uint8_t LONG_MODE_IDT_GATES = 64;
+const uint8_t LONG_MODE_IDT_GATES     = 64;
 
 
 /*

@@ -91,7 +91,7 @@
 
 #ifndef ASM_FILE
 
-#include <stdint.h>
+#include <klib/stdint.h>
 
 struct multiboot_header
 {

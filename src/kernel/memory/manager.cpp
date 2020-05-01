@@ -3,19 +3,18 @@
 #include <config.h>
 #include <klib/logger.h>
 
-inline multiboot_memory_map_t *to_rmap(uintptr_t a)
-{
-    return reinterpret_cast<multiboot_memory_map_t*>(a);
-}
-
 namespace xenon
 {
-    manager::manager(multiboot_info_t *info)
+    manager::manager(multiboot_info_t *info, paging *pg) :
+        paging_(pg)
     {
-        return;
+        // for now, and maybe forever, this code relies on the information
+        // given by the multiboot protocol, implemented by the bootloader.
+        // professional operating systems prefer to gather HW information by
+        // themselves.
         auto mmap_addr = info->mmap_addr + KVIRTUAL_ADDRESS;
-        auto mmap = to_rmap(mmap_addr);
-        while (mmap < to_rmap(mmap_addr + info->mmap_length)) {
+        auto mmap = ptr_to<multiboot_memory_map_t*>(mmap_addr);
+        while (mmap < ptr_to<multiboot_memory_map_t*>(mmap_addr + info->mmap_length)) {
             if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
 
                 // ignore lower memory for while ...
@@ -24,19 +23,35 @@ namespace xenon
                                            mmap->addr,
                                            mmap->len);
 
-                    physical_.setup(mmap->addr, mmap->len);
+                    physical_.setup(ptr_to<paddr_t>(mmap->addr), mmap->len);
                     break;
                 }
             }
 
-            mmap = to_rmap(reinterpret_cast<uint64_t>(mmap) +
-                           mmap->size + sizeof(mmap->size));
+            mmap = ptr_to<multiboot_memory_map_t*>(ptr_from(mmap) +
+                                                   mmap->size + sizeof(mmap->size));
         }
-        /*
-        auto phy = physical_.alloc();
-        pages_.map(0x0, phy, 0);
-        *((uintptr_t*)0x0) = 83;
-        logger::instance().log("0x0: 0x%x", *reinterpret_cast<uintptr_t*>(0x0));
-        */
+    }
+
+    int manager::mmap(vaddr_t addr, size_t size, uint8_t flags)
+    {
+        // reserve a contiguous virtual address space starting at addr
+        // up to size. note that the function will fail if the address is
+        // in use or if there's no contiguous addresses available.
+        if (!virtual_.alloc(addr, size)) {
+            logger::instance().log("PANIC: cannot allocate virtual address 0x%x", addr);
+            return 1;
+        }
+
+        // reserve page frames available to be used. note that it cannot reserve
+        // less then PAGE_FRAME size.
+        size = size / FRAME_SIZE;
+        paddr_t physical = physical_.alloc();
+        if (physical == nullptr) {
+            logger::instance().log("PANIC: cannot allocate %d addresses", size);
+            return 1;
+        }
+
+        return paging_->map(addr, physical, flags);
     }
 }
