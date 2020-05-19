@@ -8,29 +8,33 @@ namespace xenon
 {
     uintptr_t __placement = reinterpret_cast<uintptr_t>(&_end);
 
-    uintptr_t *placement_kalloc(size_t size, uintptr_t *paddr)
+    paddr_t placement_kalloc(size_t size, paddr_t *paddr, bool align/*=false*/)
     {
+        if (align) {
+            __placement = ALIGN_UP(__placement);
+        }
+
         uintptr_t *ret = reinterpret_cast<uintptr_t*>(__placement);
-        *paddr = __placement - KVIRTUAL_ADDRESS;
+        *paddr = ptr_to<paddr_t>(__placement - KVIRTUAL_ADDRESS);
         __placement += size;
 
         return ret;
     }
 
-    uintptr_t *placement_kalloc(size_t size)
+    paddr_t placement_kalloc(size_t size, bool align/*=false*/)
     {
-        uintptr_t tmp;
-        return placement_kalloc(size, &tmp);
-    }
-
-    uintptr_t *placement_kalloc(size_t size, uintptr_t *paddr, bool align)
-    {
-        __placement = ALIGN_UP(__placement);
-        return placement_kalloc(size, paddr);
+        paddr_t tmp;
+        return placement_kalloc(size, &tmp, align);
     }
 
     void kfree_block(size_t size)
     {
+        /*
+        // clean memory content
+        for (size_t i = 0; i < size; i++) {
+            *ptr_to<uint8_t*>(__placement) = 0;
+        }
+        */
         __placement -= size;
     }
 

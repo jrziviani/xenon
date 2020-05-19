@@ -5,9 +5,8 @@
 
 namespace xenon
 {
-    uintptr_t *placement_kalloc(size_t size, uintptr_t *paddr, bool align);
-    uintptr_t *placement_kalloc(size_t size, uintptr_t *paddr);
-    uintptr_t *placement_kalloc(size_t size);
+    vaddr_t placement_kalloc(size_t size, paddr_t *paddr, bool align=false);
+    vaddr_t placement_kalloc(size_t size, bool align=false);
     void kfree_block(size_t size);
 
     uintptr_t current();

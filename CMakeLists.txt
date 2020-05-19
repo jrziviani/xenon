@@ -18,6 +18,7 @@ endif ()
 
 set(CUSTOM_C x86_64-elf-gcc)
 set(CUSTOM_CXX x86_64-elf-g++)
+set(OBJDUMP x86_64-elf-objdump)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_COMPILER ${CUSTOM_C})

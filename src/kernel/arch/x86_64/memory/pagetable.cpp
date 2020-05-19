@@ -28,11 +28,11 @@ namespace xenon
 
         // map the whole PDE (1GiB)
         for (int i = 4; i < 512; i++) {
-            pde_table->dirs[i] = pde_table->dirs[i - 1] + 4096;
+            pde_table->dirs[i] = pde_table->dirs[i - 1] + 4_KB;
 
             pte_t *pte = reinterpret_cast<pte_t*>(ADDRESS(pde_table->dirs[i]));
             for (int j = 0; j < 512; j++) {
-                pte->pages[j] = paddr + 0x1000;
+                pte->pages[j] = paddr + 4_KB;
                 paddr = pte->pages[j];
             }
         }

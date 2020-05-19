@@ -31,6 +31,8 @@ namespace xenon
             mmap = ptr_to<multiboot_memory_map_t*>(ptr_from(mmap) +
                                                    mmap->size + sizeof(mmap->size));
         }
+
+        heap_.setup(ptr_to<vaddr_t>(KVIRTUAL_ADDRESS + 8_MB), 16_MB);
     }
 
     int manager::mmap(vaddr_t addr, size_t size, uint8_t flags)
@@ -53,5 +55,22 @@ namespace xenon
         }
 
         return paging_->map(addr, physical, flags);
+    }
+
+    void manager::unmap(vaddr_t addr, size_t size)
+    {
+        (void)size;
+
+        paging_->unmap(addr);
+    }
+
+    vaddr_t manager::kalloc(size_t size)
+    {
+        return heap_.alloc(size);
+    }
+
+    void manager::kfree(vaddr_t addr)
+    {
+        heap_.dealloc(addr);
     }
 }

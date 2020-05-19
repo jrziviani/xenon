@@ -130,6 +130,20 @@ namespace xenon
             ++size_;
         }
 
+        void pop_back()
+        {
+            node *n = tail_;
+            tail_ = n->previous_;
+            kfree_block(sizeof(node));
+        }
+
+        void pop_front()
+        {
+            node *n = head_;
+            head_ = n->next_;
+            kfree_block(sizeof(n));
+        }
+
         void clear()
         {
             int total = 0;

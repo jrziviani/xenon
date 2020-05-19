@@ -150,19 +150,6 @@ gdt64_code:
     //       |         +- present
     //       +- 64-bit
 
-gdt64_data:
-    // DATA SEGMENT
-    // .quad (1<<53) | (1<<47) | (1<<44) | (0<<43) | (1<<41)
-    //.quad 0x00cf92000000ffff
-    //       |         |         |         |         +- writeable
-    //       |         |         |         +- data segment
-    //       |         |         +- must be 1
-    //       |         +- present
-    //       +- 64-bit
-
-    // TSS
-    //.quad 0x0000000000000000
-    //.quad 0x0000000000000000
 gdt64_end:
 
 // GDT header

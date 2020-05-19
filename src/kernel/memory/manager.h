@@ -4,6 +4,7 @@
 #include "physical.h"
 #include "virtual.h"
 #include "paging.h"
+#include "heap.h"
 
 #include <klib/multiboot.h>
 
@@ -24,12 +25,16 @@ namespace xenon
         physical physical_;
         virt     virtual_;
         paging  *paging_;
+        heap     heap_;
 
     public:
         manager(multiboot_info_t *info, paging *pg);
 
         int mmap(vaddr_t addr, size_t size, uint8_t flags);
         void unmap(vaddr_t addr, size_t size);
+
+        vaddr_t kalloc(size_t size);
+        void kfree(vaddr_t addr);
     };
 }
 

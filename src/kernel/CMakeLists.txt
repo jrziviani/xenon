@@ -3,6 +3,7 @@ include_directories(klib)
 add_subdirectory(appendix)
 add_subdirectory(arch)
 add_subdirectory(memory)
+add_subdirectory(proc)
 
 set(MAX_PAGE_SIZE 0x1000)
 set(LINKER_SCRIPT "kernel.ld")
@@ -16,6 +17,7 @@ set_target_properties(kernel PROPERTIES
 
 target_link_libraries(kernel LINK_PUBLIC
                       x86_64.o
+                      proc.o
                       memory.o
                       appendix.o)
 
@@ -32,6 +34,8 @@ add_custom_command(TARGET kernel POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/contrib/grub.cfg iso/boot/grub
                    COMMAND ${GRUBRESCUE} -o xenon.iso iso > /dev/null 2>&1
                    COMMAND ${CMAKE_COMMAND} -E remove_directory iso
+                   COMMAND ${OBJDUMP} -S src/kernel/kernel > kernel.asm
+                   COMMAND ${OBJDUMP} -t src/kernel/kernel > kernel.sym
                    COMMAND ${CMAKE_COMMAND} -E echo "Finished")
 
 add_custom_target(qemu

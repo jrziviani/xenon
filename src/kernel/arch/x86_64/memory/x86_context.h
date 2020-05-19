@@ -9,31 +9,33 @@ namespace xenon
 {
     class x86_context : public context
     {
-        uint64_t rip_;
-        uint64_t rsp_;
-        uint64_t rbp_;
-
     public:
         void update_context() final
         {
-            rsp_ = movfrsp();
-            rbp_ = movfrbp();
-            rip_ = movfrip();
+            stack_ptr_ = ptr_to<vaddr_t>(movfrsp());
+            frame_ptr_ = ptr_to<vaddr_t>(movfrbp());
+            instruction_ptr_ = ptr_to<vaddr_t>(movfrip());
+            top_dir_ = get_current_page();
         }
 
-        void set_stack_ptr(void *sp) final
+        void set_stack_ptr(vaddr_t sp) final
         {
-            rsp_ = reinterpret_cast<uint64_t>(sp);
+            stack_ptr_ = sp;
         }
 
-        void set_base_ptr(void *bp) final
+        void set_base_ptr(vaddr_t bp) final
         {
-            rbp_ = reinterpret_cast<uint64_t>(bp);
+            frame_ptr_ = bp;
         }
 
-        void set_instruction_ptr(void *ip) final
+        void set_instruction_ptr(vaddr_t ip) final
         {
-            rip_ = reinterpret_cast<uint64_t>(ip);
+            instruction_ptr_ = ip;
+        }
+
+        void set_top_dir(paddr_t dir) final
+        {
+            top_dir_ = dir;
         }
     };
 }

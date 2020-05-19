@@ -9,13 +9,13 @@
 #define ISR0(name, num)     \
     FN_HEADER(name)         \
     cli;                    \
-    push $0x0;              \
     push $num;              \
     jmp isr_handler
 
 #define ISR1(name, num, x)  \
     FN_HEADER(name)         \
     cli;                    \
+    push x;                 \
     push $num;              \
     jmp isr_handler
 
@@ -28,38 +28,38 @@
 
 #define ISR_ADDR(name) &name
 
-ISR(div, 0);
-ISR(dbg, 1);
-ISR(nmi, 2);
-ISR(bkp, 3);
-ISR(ovf, 4);
-ISR(bnd, 5);
-ISR(ill, 6);
-ISR(cop, 7);
-ISR(dbl, 8, 0);
-ISR(ovr, 9);
-ISR(tss, 10, 0);
-ISR(seg, 11, 0);
-ISR(stk, 12, 0);
-ISR(gen, 13, 0);
-ISR(pgf, 14, 0);
-ISR(unk, 15);
-ISR(cft, 16);
+ISR(div,  0, 0);
+ISR(dbg,  1, 0);
+ISR(nmi,  2, 0);
+ISR(bkp,  3, 0);
+ISR(ovf,  4, 0);
+ISR(bnd,  5, 0);
+ISR(ill,  6, 0);
+ISR(cop,  7, 0);
+ISR(dbl,  8);
+ISR(ovr,  9, 0);
+ISR(tss, 10);
+ISR(seg, 11);
+ISR(stk, 12);
+ISR(gen, 13);
+ISR(pgf, 14);
+ISR(unk, 15, 0);
+ISR(cft, 16, 0);
 ISR(aln, 17);
-ISR(mch, 18);
-ISR(rs0, 19);
-ISR(rs1, 20);
+ISR(mch, 18, 0);
+ISR(rs0, 19, 0);
+ISR(rs1, 20, 0);
 ISR(rs2, 21);
-ISR(rs3, 22);
-ISR(rs4, 23);
-ISR(rs5, 24);
-ISR(rs6, 25);
-ISR(rs7, 26);
-ISR(rs8, 27);
-ISR(rs9, 28);
-ISR(rsA, 29);
-ISR(rsB, 30);
-ISR(rsC, 31);
+ISR(rs3, 22, 0);
+ISR(rs4, 23, 0);
+ISR(rs5, 24, 0);
+ISR(rs6, 25, 0);
+ISR(rs7, 26, 0);
+ISR(rs8, 27, 0);
+ISR(rs9, 28, 0);
+ISR(rsA, 29, 0);
+ISR(rsB, 30, 0);
+ISR(rsC, 31, 0);
 
 IRQ(0);
 IRQ(1);

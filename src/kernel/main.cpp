@@ -2,6 +2,7 @@
 #include <klib/logger.h>
 #include <klib/timer.h>
 #include <memory/manager.h>
+#include <proc/task.h>
 
 #include "arch_factory.h"
 #include "config.h"
@@ -9,6 +10,12 @@
 #include "test_timer.h"
 
 using namespace xenon;
+
+struct test
+{
+    int a;
+    bool b;
+};
 
 void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 {
@@ -51,9 +58,20 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     logger::instance().log("Initializing tasking");
     arch->create_context();
 
+    logger::instance().log("Creating initial process");
+    task_controller processes(memory_manager);
+    processes.create(arch->get_context());
+
     memory_manager.mmap(0x0, 1, 0);
     *((uintptr_t*)0x0) = 55;
     logger::instance().log("Content 0x0: 0x%x", *reinterpret_cast<uintptr_t*>(0x0));
+    memory_manager.unmap(0x0, 1);
+    //logger::instance().log("Content 0x0: 0x%x", *reinterpret_cast<uintptr_t*>(0x0));
+
+    test *t = static_cast<test*>(memory_manager.kalloc(sizeof(test)));
+    t->a = 80;
+    t->b = true;
+    logger::instance().log("%d, %s", t->a, (t->b) ? "true" : "false");
 
         /*
         auto phy = physical_.alloc();

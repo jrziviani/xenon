@@ -7,6 +7,7 @@
 /*
  * Constants
  */
+const uint8_t LONG_MODE_GDT_GATES     =  5;
 const uint8_t LONG_MODE_IDT_GATES     = 64;
 
 
@@ -33,32 +34,66 @@ struct idt_ptr
     uint64_t base;
 } __attribute__((packed));
 
-struct gdt_code_entry
+union gdt_code_entry
 {
-    /*
-    uint64_t ign_1          : 42; // fields ignored in long mode
-    uint64_t conforming     :  1; // 4.11.1 Direct Control Transfers, page 100
-    uint64_t one            :  2; // must be filed with 1s
-    uint64_t dpl            :  2; // descriptor priviledge-devel
-    uint64_t present        :  1; // segment present in memory
-    uint64_t ign_2          :  5; // fields ignored in long mode
-    uint64_t long_mode      :  1; // long or compatibility mode
-    uint64_t default_size   :  1; // default operand size (must be 0 in long mode)
-    uint64_t ign_3          :  9; // fields ignored in long mode
-    */
-    uint64_t ulong;
-} __attribute__((packed));
+    struct {
+        uint64_t ign_1          : 42; // fields ignored in long mode
+        uint64_t conforming     :  1; // 4.11.1 Direct Control Transfers, page 100
+        uint64_t one            :  2; // must be filed with 1s
+        uint64_t dpl            :  2; // descriptor priviledge-devel
+        uint64_t present        :  1; // segment present in memory
+        uint64_t ign_2          :  5; // fields ignored in long mode
+        uint64_t long_mode      :  1; // long or compatibility mode
+        uint64_t default_size   :  1; // default operand size (must be 0 in long mode)
+        uint64_t ign_3          :  9; // fields ignored in long mode
+    } fields;
 
-struct gdt_data_entry
-{
-    /*
-    uint64_t ign_1          : 44; // fields ignored in long mode
-    uint64_t one            :  1; // must be one
-    uint64_t ign_2          :  2; // fields ignored in long mode
-    uint64_t present        :  1; // segment present in memory
-    uint64_t ign_3          : 16; // fields ignored in long mode
-    */
     uint64_t ulong;
+};
+
+union gdt_data_entry
+{
+    struct {
+        uint64_t ign_1          : 41; // fields ignored in long mode
+        uint64_t writable       :  1; // segment is writable or readonly
+        uint64_t zero           :  2; // must be zeroes
+        uint64_t one            :  1; // must be one
+        uint64_t ign_2          :  2; // fields ignored in long mode
+        uint64_t present        :  1; // segment present in memory
+        uint64_t ign_3          : 16; // fields ignored in long mode
+    } fields;
+
+    uint64_t ulong;
+};
+
+union gdt_tss_entry
+{
+    // [1] types
+    //      0b0010 - 64-bit LDT        0b1001 - Available 64-bit TSS
+    //      0b1011 - Busy 64-bit TSS   0b1100 - 64-bit call gate
+    //      0b1110 - 64-bit int. gate  0b1111 - 64-bit trap gate
+    struct {
+        uint64_t limit_lo       : 16; // segment limit
+        uint64_t base_addr_lo   : 24; // base address
+        uint64_t type           :  4; // segment type[1]
+        uint64_t zero           :  1; // must be zero
+        uint64_t dpl            :  2; // descriptor priviledge-level (ring)
+        uint64_t present        :  1; // segment present in memory
+        uint64_t limit_hi       :  4; // segment limit (higher address)
+        uint64_t avl            :  1; // availability
+        uint64_t ign            :  2; // ignored
+        uint64_t granularity    :  1; // granularity
+        uint64_t base_addr_md   :  8; // base address
+    } fields_lo;
+
+    struct {
+        uint64_t base_addr_hi   : 32; // base address
+        uint64_t ign_1          :  8; // ignored fields
+        uint64_t zero           :  5; // must be zeroes
+        uint64_t ign_2          : 19; // ignored fields
+    } fields_hi;
+
+    uint64_t ulong[2];
 } __attribute__((packed));
 
 struct gdt_entry
@@ -84,7 +119,7 @@ extern "C"
     void gdt_reload(gdt_ptr *);
 }
 
-gdt_entry g_entries[3];
+gdt_entry g_entries[LONG_MODE_GDT_GATES];
 idt_entry i_entries[LONG_MODE_IDT_GATES];
 
 
@@ -96,35 +131,62 @@ namespace xenon
     void segments::gdt_setup()
     {
         gdt_ptr gdt;
+        gdt_code_entry code;
+        gdt_data_entry data;
 
-        /*
-        entry.code.ign_1        = 0x0;
-        entry.code.conforming   = 0x1;
-        entry.code.one          = 0x3;
-        entry.code.dpl          = 0x0;
-        entry.code.present      = 0x1;
-        entry.code.ign_2        = 0x0;
-        entry.code.long_mode    = 0x1;
-        entry.code.default_size = 0x0;
-        entry.code.ign_3        = 0x0;
-        */
+        code.fields.ign_1        = 0x0;
+        code.fields.conforming   = 0x0;
+        code.fields.one          = 0x3;
+        code.fields.dpl          = 0x0;
+        code.fields.present      = 0x1;
+        code.fields.ign_2        = 0x0;
+        code.fields.long_mode    = 0x1;
+        code.fields.default_size = 0x0;
+        code.fields.ign_3        = 0x0;
 
-        /*
-        entry.data.ign_1        = 0x0;
-        entry.data.one          = 0x1;
-        entry.data.ign_2        = 0x0;
-        entry.data.present      = 0x1;
-        entry.data.ign_3        = 0x0;
-        */
+        data.fields.ign_1        = 0x0;
+        data.fields.writable     = 0x1;
+        data.fields.zero         = 0x0;
+        data.fields.one          = 0x1;
+        data.fields.ign_2        = 0x0;
+        data.fields.present      = 0x1;
+        data.fields.ign_3        = 0x0;
 
         g_entries[0].entry = 0;
-        g_entries[1].entry = (1UL<<53)|(1UL<<47)|(1UL<<44)|(1UL<<43);
-        g_entries[2].entry = (1UL<<47)|(1UL<<44)|(1UL<<41);
+        g_entries[1].entry = code.ulong;
+        g_entries[2].entry = data.ulong;
+        g_entries[3].entry = 0; // TSS
+        g_entries[4].entry = 0; // TSS
 
-        gdt.limit = sizeof(g_entries[0]) * 3 - 1;
+        gdt.limit = sizeof(g_entries[0]) * LONG_MODE_GDT_GATES - 1;
         gdt.base = reinterpret_cast<uint64_t>(&g_entries);
 
         gdt_reload(&gdt);
+    }
+
+    void tss_set_gate(paddr_t addr)
+    {
+        gdt_tss_entry tss;
+        tss.ulong[0] = g_entries[3].entry;
+        tss.ulong[1] = g_entries[4].entry;
+
+        //uint16_t limit    = sizeof(g_entries[0]) * LONG_MODE_GDT_GATES - 1;
+        uintptr_t address = ptr_from(addr);
+
+        tss.fields_lo.base_addr_lo = address & 0xffffff;
+        tss.fields_lo.base_addr_md = (address >> 24) & 0xff;
+        tss.fields_hi.base_addr_hi = address >> 32;
+        tss.fields_lo.limit_lo     = 0xffff;
+        tss.fields_lo.limit_hi     = 0xf;
+        tss.fields_lo.avl          = 0x0;
+        tss.fields_lo.dpl          = 0x3;
+        tss.fields_lo.present      = 0x1;
+        tss.fields_lo.zero         = 0x0;
+        tss.fields_lo.type         = 0x9; // 0b1001 - see above
+        tss.fields_hi.zero         = 0x0;
+
+        g_entries[3].entry = tss.ulong[0];
+        g_entries[4].entry = tss.ulong[1];
     }
 
     void segments::idt_setup()
@@ -225,6 +287,17 @@ void irq_remap()
     // interrupts are used for exceptions (page fault, div 0, etc).
     // PIC1 will issue IRQ OFFSET_PIC1 .. OFFSET_PIC1 + 7
     // PIC2 will issue IRQ OFFSET_PIC2 .. OFFSET_PIC2 + 7
+    //
+    //    xenon::outb(PIC1_DATA, 0x04); = 0b00000100
+    //    xenon::outb(PIC2_DATA, 0x02);     |
+    //                        +------+  +-------...
+    //               +--------V--+      | 8295A
+    //  -------+     | 8259A  0 0|      | Slave
+    //   80x86 |     | Master 0 1|      |
+    //         |     |        1 2|<----+| intr
+    //         |<----+ intr   0 3|      | id 2
+    //         |     |        0 4|      |
+    //        ...   ...         ...    ...
     const int OFFSET_PIC1 = 0x20;
     const int OFFSET_PIC2 = 0x28;
 
@@ -264,17 +337,4 @@ void irq_remap()
     // restore saved masks
     xenon::outb(PIC1_DATA, a1);
     xenon::outb(PIC2_DATA, a2);
-
-    /*
-    xenon::outb(PIC1_DATA, 0x04); = 0b00000100
-    xenon::outb(PIC2_DATA, 0x02);     |
-                        +------+  +-------...
-               +--------V--+      | 8295A
-  -------+     | 8259A  0 0|      | Slave
-   80x86 |     | Master 0 1|      |
-         |     |        1 2|<----+| intr
-         |<----+ intr   0 3|      | id 2
-         |     |        0 4|      |
-        ...   ...         ...    ...
-    */
 }

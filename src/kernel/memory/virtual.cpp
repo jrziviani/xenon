@@ -2,29 +2,32 @@
 #include "allocators.h"
 
 const vaddr_t VADDR_START   = reinterpret_cast<vaddr_t>(0);
-const size_t VADDR_SIZE     = 0x4000000000;
+const size_t VADDR_SIZE     = 256_GB;
 
 namespace xenon
 {
     virt::virt()
     {
-        uintptr_t *place = placement_kalloc(sizeof(node));
+        vaddr_t place = placement_kalloc(sizeof(node));
         node *first = new (place) node(VADDR_START, VADDR_SIZE);
         allocated_list_.push_back(first);
     }
 
     virt::virt(const virt &other)
     {
-        if (this == &other) {
-            return;
+        allocated_list_.clear();
+        for (auto slot : other.allocated_list_) {
+            allocated_list_.push_back(slot);
         }
-
     }
 
     virt &virt::operator=(const virt &other)
     {
-        if (this == &other) {
-            return *this;
+        if (this != &other) {
+            allocated_list_.clear();
+            for (auto slot : other.allocated_list_) {
+                allocated_list_.push_back(slot);
+            }
         }
 
         return *this;
@@ -66,7 +69,7 @@ namespace xenon
             }
 
             // create a new slot after the initial_addr + size
-            uintptr_t *place = placement_kalloc(sizeof(node));
+            vaddr_t place = placement_kalloc(sizeof(node));
             node *slot = new (place) node(reinterpret_cast<vaddr_t>(addr + size),
                                           free_spot->size);
             allocated_list_.push_back(slot);
@@ -82,7 +85,7 @@ namespace xenon
 
     void virt::free(vaddr_t addr, size_t size)
     {
-        uintptr_t *place = placement_kalloc(sizeof(node));
+        vaddr_t place = placement_kalloc(sizeof(node));
         node *next = new (place) node(addr, size);
         allocated_list_.push_front(next);
     }

@@ -15,45 +15,94 @@
 
 namespace xenon
 {
+    /*
+     *   ADDRESS    CONTENT     top_dir = 0x1000
+     *   0x1000     0x8003
+     *   0x1008     0x9003
+     *   0x1010     0xA003
+     *   0x1018     0xB003
+     *   0x1020     0xC003
+     *   ...        ...
+     *
+     *   top_dir contains the address to the first element of PML4 table
+     *   (in other words, top_dir points to PML4), and the content of each
+     *   PML4 entry (8 bytes each entry in this 64-bit world) is the
+     *   address to the first PDPT element.
+     *
+     *   The scheme continues:
+     *   ADDRESS    CONTENT
+     *   0x8000     0x10003
+     *   0x8008     0x11003
+     *   0x8010     0x12003
+     *   ...        ...
+     *
+     *   which can be represented as (in practice, sum 0x3 to all entries):
+     *                PML4           PDPT           PDE             PTE              FRAME
+     *   top_dir ---> 0x1000 ------> 0x8000 ------> 0x10000 ------> 0x100000 ------> 0x200000
+     *                0x1008 ---+    0x8008 ---+    0x11000 ...     0x101000 ...     ...
+     *                0x1010 -+ |    0x8010    |    0x12000         0x102000
+     *                ...     | |    ...      ...   ...             ...
+     *                        | +--> 0x9000 ------> 0xN0000
+     *                        |      0x9008 ---+    0xN1000
+     *                       ...     0x9010    |    0xN2000
+     *                               ...      ...   ...
+     */ 
     pte_t *x86_paging::get_page(paddr_t top_dir, vaddr_t vaddr, bool make)
     {
         auto pml4 = PML4(vaddr);
         auto pdpt = PDPT(vaddr);
         auto pde  = PDE(vaddr);
 
+        // top_dir points to PML4 table and PML4(vaddr) is the index, this cell
+        // points to the PDPT table. this code checks if the PDPT table at
+        // PML4[index] is present, if it's not present (and the caller wants it
+        // present) we allocate a new PDPT table and store its (physical)
+        // addresss at PML4[index]. If the page is not present and the caller
+        // doesn't want to make it present, simply return null.
+        //
+        // it's important to notice that we'll store the physical address but the
+        // table itself is managed using the virtual address. thanks to identity
+        // mapping, we can be sure that:
+        //     virtual address = physical address & ~0xfff + KVIRTUAL_ADDRESS
         pml4_t *pml4_table = reinterpret_cast<pml4_t*>(ADDRESS(top_dir));
         if (!PRESENT(pml4_table->dirs[pml4]) && make) {
-            uintptr_t physical;
-            pdpt_t *tmp = reinterpret_cast<pdpt_t*>(placement_kalloc(sizeof(pdpt_t), &physical, true));
+            paddr_t paddr;
+            pdpt_t *tmp = reinterpret_cast<pdpt_t*>(placement_kalloc(sizeof(pdpt_t), &paddr, true));
             memset(tmp, 0, sizeof(pdpt_t));
-            pml4_table->dirs[pml4] = physical + 0x3;
+            pml4_table->dirs[pml4] = ptr_from(paddr) + 0x3;
         }
         else if (!PRESENT(pml4_table->dirs[pml4])) {
             return nullptr;
         }
 
+        // PML4[index] points to a PDPT table and PDPT(vaddr) is the index, this
+        // PDPT[index] points to the PDE table and the process is exactly the same
+        // used by PML4 above.
         pdpt_t *pdpt_table = reinterpret_cast<pdpt_t*>(ADDRESS(pml4_table->dirs[pml4]));
         if (!PRESENT(pdpt_table->dirs[pdpt]) && make) {
-            uintptr_t physical;
-            pde_t *tmp = reinterpret_cast<pde_t*>(placement_kalloc(sizeof(pde_t), &physical, true));
+            paddr_t paddr;
+            pde_t *tmp = reinterpret_cast<pde_t*>(placement_kalloc(sizeof(pde_t), &paddr, true));
             memset(tmp, 0, sizeof(pde_t));
-            pdpt_table->dirs[pdpt] = physical + 0x3;
+            pdpt_table->dirs[pdpt] = ptr_from(paddr) + 0x3;
         }
         else if (!PRESENT(pdpt_table->dirs[pdpt])) {
             return nullptr;
         }
 
+        // PDPT[index] points to a PDE table and PDE(vaddr) is the index, this PDE[index]
+        // points to the PTE table.
         pde_t *pde_table = reinterpret_cast<pde_t*>(ADDRESS(pdpt_table->dirs[pdpt]));
         if (!PRESENT(pde_table->dirs[pde]) && make) {
-            uintptr_t physical;
-            pte_t *tmp = reinterpret_cast<pte_t*>(placement_kalloc(sizeof(pte_t), &physical, true));
+            paddr_t paddr;
+            pte_t *tmp = reinterpret_cast<pte_t*>(placement_kalloc(sizeof(pte_t), &paddr, true));
             memset(tmp, 0, sizeof(pte_t));
-            pde_table->dirs[pde] = physical + 0x3;
+            pde_table->dirs[pde] = ptr_from(paddr) + 0x3;
         }
         else if (!PRESENT(pde_table->dirs[pde])) {
             return nullptr;
         }
 
+        // returns a pointer to PTE table
         return reinterpret_cast<pte_t*>(ADDRESS(pde_table->dirs[pde]));
     }
 
