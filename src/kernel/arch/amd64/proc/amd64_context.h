@@ -46,22 +46,21 @@
 
 #else // __ASSEMBLER__
 
-    #define CONTEXT_R15(base)  0x0(base);
-    #define CONTEXT_R14(base)  0x8(base);
-    #define CONTEXT_R13(base) 0x10(base);
-    #define CONTEXT_R12(base) 0x18(base);
-    #define CONTEXT_RBP(base) 0x20(base);
-    #define CONTEXT_RSP(base) 0x28(base);
-    #define CONTEXT_RBX(base) 0x30(base);
-    #define CONTEXT_RIP(base) 0x38(base);
-    #define CONTEXT_CR0(base) 0x40(base);
-    #define CONTEXT_CR2(base) 0x48(base);
-    #define CONTEXT_CR3(base) 0x50(base);
-    #define CONTEXT_CR4(base) 0x58(base);
+    #define CONTEXT_R15(base)  0x0(base)
+    #define CONTEXT_R14(base)  0x8(base)
+    #define CONTEXT_R13(base) 0x10(base)
+    #define CONTEXT_R12(base) 0x18(base)
+    #define CONTEXT_RBP(base) 0x20(base)
+    #define CONTEXT_RSP(base) 0x28(base)
+    #define CONTEXT_RBX(base) 0x30(base)
+    #define CONTEXT_RIP(base) 0x38(base)
+    #define CONTEXT_CR0(base) 0x40(base)
+    #define CONTEXT_CR2(base) 0x48(base)
+    #define CONTEXT_CR3(base) 0x50(base)
+    #define CONTEXT_CR4(base) 0x58(base)
 
 /*
     #define ADDRESSING(val) val
-
     #define CONTEXT_R15(base) ADDRESSING(__builtin_offsetof(context_regs, r15))(base)
     #define CONTEXT_R14(base) ADDRESSING(__builtin_offsetof(context_regs, r15))(base)
     #define CONTEXT_R13(base) ADDRESSING(__builtin_offsetof(context_regs, r15))(base)
@@ -75,6 +74,7 @@
     #define CONTEXT_CR3(base) ADDRESSING(__builtin_offsetof(context_regs, r15))(base)
     #define CONTEXT_CR4(base) ADDRESSING(__builtin_offsetof(context_regs, r15))(base)
 */
+
 #endif // __ASSEMBLER__
 
 #endif // AMD64_CONTEXT_H

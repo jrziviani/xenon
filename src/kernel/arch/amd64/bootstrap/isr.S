@@ -115,36 +115,36 @@ IRQ(15);
 .endm
 
 FN_HEADER(isr_handler)
-    mov $1, %r15
+    mov  $1, %r15
     save_regs
 
-    mov %ds, %ax
+    mov  %ds, %ax
     push %rax
 
-    mov %rsp, %rdi
+    mov  %rsp, %rdi
     call _ZN5xenon17excpetion_handlerERKNS_5faultE
 
-    pop %rax
-    mov %ax, %ds
-    mov %ax, %ds
+    pop  %rax
+    mov  %ax, %ds
+    mov  %ax, %ds
 
     restore_regs
-    add $16, %rsp
+    add  $16, %rsp
     iretq
 
 FN_HEADER(irq_handler)
     save_regs
 
-    mov %ds, %ax
+    mov  %ds, %ax
     push %rax
 
-    mov %rsp, %rdi
+    mov  %rsp, %rdi
     call _ZN5xenon17interrupt_handlerERKNS_5faultE
 
-    pop %rax
-    mov %ax, %ds
-    mov %ax, %ds
+    pop  %rax
+    mov  %ax, %ds
+    mov  %ax, %ds
 
     restore_regs
-    add $16, %rsp
+    add  $16, %rsp
     iretq

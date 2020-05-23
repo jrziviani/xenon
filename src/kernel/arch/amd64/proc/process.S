@@ -51,7 +51,7 @@ switch_context:
     movq    %rsp, %rbp;
 
     save_context;
-    //restore_context;
+    restore_context;
 
     leaveq
     retq
