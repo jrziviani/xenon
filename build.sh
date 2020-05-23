@@ -29,15 +29,15 @@ config_cross_compiler() {
 
     local contrib="$PWD/contrib"
 
-    if [[ -d build/compiler/bin && -f build/compiler/.done ]]
+    if [[ -d .build/compiler/bin && -f .build/compiler/.done ]]
     then
-        export PATH=$PATH:$PWD/build/compiler/bin
+        export PATH=$PATH:$PWD/.build/compiler/bin
         print_message "Compiler looks fine, return"
         return
     fi
 
-    mkdir -p build/compiler/tmp
-    pushd build/compiler
+    mkdir -p .build/compiler/tmp
+    pushd .build/compiler
         local cpath=$PWD
 
         pushd tmp
@@ -108,7 +108,7 @@ config_cross_compiler() {
         print_message "Done"
     popd # build/compiler
 
-    export PATH=$PATH:$PWD/build/compiler/bin
+    export PATH=$PATH:$PWD/.build/compiler/bin
 }
 
 makeit() {
@@ -121,8 +121,8 @@ makeit() {
 
     print_message "target: $target, verbose: $2"
 
-    mkdir -p build
-    pushd build > /dev/null
+    mkdir -p .build
+    pushd .build > /dev/null
     cmake -H.. -B$target -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     popd > /dev/null
 
@@ -132,24 +132,24 @@ makeit() {
 buildit() {
     print_header "Building"
 
-    [[ -d build ]] || die "build dir doesn't exist" 1
+    [[ -d .build ]] || die "build dir doesn't exist" 1
 
     local target="release"
     local verbose=""
     [[ $1 -eq 1 ]] && target="debug"
     [[ $2 -eq 1 ]] && verbose="--verbose"
 
-    pushd build > /dev/null
+    pushd .build > /dev/null
     cmake --build $target $verbose
     popd > /dev/null
 
-    ln -fs build/$target/compile_commands.json .
+    ln -fs .build/$target/compile_commands.json .
 }
 
 clean() {
     print_header "Cleaning"
 
-    [[ -d build ]] || die "build dir doesn't exist" 1
+    [[ -d .build ]] || die "build dir doesn't exist" 1
 
     local target="release"
     local verbose=""
@@ -157,7 +157,7 @@ clean() {
     [[ $1 -eq 1 ]] && target="debug"
     [[ $2 -eq 1 ]] && verbose="--verbose"
 
-    pushd build > /dev/null
+    pushd .build > /dev/null
     if [[ ! -d $target ]]
     then
         print_message "Target $target doesn't exist, exit"
@@ -176,14 +176,14 @@ clean() {
 qemuit() {
     print_header "Running QEMU"
 
-    [[ -d build ]] || die "build dir doesn't exist" 1
+    [[ -d .build ]] || die "build dir doesn't exist" 1
 
     local target="release"
     local qemu="qemu"
     [[ $1 -eq 1 ]] && target="debug"
     [[ $2 -eq 1 ]] && qemu="qemu-debug"
 
-    pushd build > /dev/null
+    pushd .build > /dev/null
     if [[ ! -d $target ]]
     then
         print_message "Target $target doesn't exist, exit"
@@ -197,14 +197,14 @@ qemuit() {
 bochsit() {
     print_header "Running BOCHS"
 
-    [[ -d build ]] || die "build dir doesn't exist" 1
+    [[ -d .build ]] || die "build dir doesn't exist" 1
 
     local target="release"
     local bochs="bochs"
     [[ $1 -eq 1 ]] && target="debug"
     [[ $2 -eq 1 ]] && bochs="bochs-debugger"
 
-    pushd build > /dev/null
+    pushd .build > /dev/null
     if [[ ! -d $target ]]
     then
         print_message "Target $target doesn't exist, exit"
@@ -233,8 +233,20 @@ build() {
     [[ $cmake -eq 1 ]] && makeit $debug $verbose
     [[ $qemu -eq 1 ]]  && qemuit $debug $gdb
     [[ $bochs -eq 1 ]]  && bochsit $debug $gdb
+}
 
-    return 0
+helpme() {
+    printf "run %s [options]\n" "$0"
+    printf "Options:\n"
+    printf "\t--build   (-b):\tBuild release target (+binutils and +gcc if first time)\n"
+    printf "\t--clean   (-c):\tClean old objects (binutils and gcc won't be remove)\n"
+    printf "\t--force   (-f):\tUse with --clean to completly remove a target \n"
+    printf "\t--debug   (-d):\tBuild debug target\n"
+    printf "\t--qemu    (-q):\tRun OS in QEMU emulator\n"
+    printf "\t--gdb     (-g):\tRun OS in QEMU with GDB for debugging\n"
+    printf "\t--bochs   (-x):\tRun OS in BOCHS emulator\n"
+    printf "\t--verbose (-v):\tShow details during the build process\n"
+    printf "\t--help    (-h):\tPrint this help\n"
 }
 
 main() {
@@ -251,6 +263,7 @@ main() {
     local force=0
     local verbose=0
 
+    local cnt=0
     while [[ "$1" =~ -[a-z] || "$1" =~ --[a-z]+ ]]; do
         local opt="$1"
         shift
@@ -290,12 +303,25 @@ main() {
                 ;;
 
             -h|--help)
+                helpme
+                exit 0
                 ;;
 
             *)
+                printf "Wrong options: %s\n" "$opt"
+                helpme
+                exit 1
                 ;;
         esac
+        cnt=$((cnt+1))
     done
+
+    if [[ $cnt == 0 ]]
+    then
+        printf "Wrong options: %s\n" "$@"
+        helpme
+        exit 1
+    fi
 
     [[ $qemu == 1 ]] && bochs=0
 
