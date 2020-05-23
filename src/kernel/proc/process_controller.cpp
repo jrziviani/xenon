@@ -7,6 +7,16 @@ namespace xenon
     {
     }
 
+    void process_controller::set_running(process *proc)
+    {
+        running_ = proc;
+    }
+
+    void process_controller::set_running_from_queue()
+    {
+        running_ = ready_queue_.pop_back();
+    }
+
     void process_controller::switch_to(process *proc)
     {
         (void)proc;

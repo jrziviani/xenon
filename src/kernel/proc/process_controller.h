@@ -43,6 +43,10 @@ namespace xenon
     public:
         process_controller(manager &memory_manager);
 
+        void set_running(process *proc);
+        void set_running_from_queue();
+
+    public:
         virtual void create_process(context *ctx) = 0;
     };
 }

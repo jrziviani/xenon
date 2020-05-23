@@ -62,6 +62,7 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     arch->create_process_controller(memory_manager);
     process_controller *processes = arch->get_process_controller();
     processes->create_process(arch->get_context());
+    processes->set_running_from_queue();
 
     memory_manager.mmap(0x0, 1, 0);
     *((uintptr_t*)0x0) = 55;
