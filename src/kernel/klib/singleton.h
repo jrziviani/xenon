@@ -13,11 +13,11 @@ namespace xenon
             return instance;
         }
 
-        ~singleton() = delete;
-        singleton(const singleton&) = delete;
-        singleton(singleton &&) = delete;
+        ~singleton()                           = delete;
+        singleton(const singleton&)            = delete;
+        singleton(singleton &&)                = delete;
         singleton &operator=(const singleton&) = delete;
-        singleton &&operator=(singleton&&) = delete;
+        singleton &&operator=(singleton&&)     = delete;
 
     private:
         singleton()

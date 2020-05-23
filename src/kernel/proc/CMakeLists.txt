@@ -1,1 +1,3 @@
-add_library(proc.o OBJECT task.cpp)
+add_library(proc.o OBJECT process_controller.cpp
+                          process.cpp
+                          context.cpp)

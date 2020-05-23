@@ -1,6 +1,6 @@
 #include "segments.h"
-#include "instructions.h"
 
+#include <arch/amd64/instructions.h>
 #include <klib/logger.h>
 
 

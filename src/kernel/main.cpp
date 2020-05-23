@@ -2,7 +2,7 @@
 #include <klib/logger.h>
 #include <klib/timer.h>
 #include <memory/manager.h>
-#include <proc/task.h>
+#include <proc/process_controller.h>
 
 #include "arch_factory.h"
 #include "config.h"
@@ -32,12 +32,12 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     }
 
 #ifdef __x86_64__
-    auto arch = set_architecture(ARCHITECTURES::X86_64);
+    auto arch = set_architecture(ARCHITECTURES::AMD64);
     if (arch == nullptr) {
-        logger::instance().log("PANIC: error setting x86_64 architecture");
+        logger::instance().log("PANIC: error setting AMD64 architecture");
     }
 
-    logger::instance().log("Booting x86_64");
+    logger::instance().log("Booting AMD64");
 #else
     logger::instance().log("PANIC: architecture not supported");
     return;
@@ -59,8 +59,9 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     arch->create_context();
 
     logger::instance().log("Creating initial process");
-    task_controller processes(memory_manager);
-    processes.create(arch->get_context());
+    arch->create_process_controller(memory_manager);
+    process_controller *processes = arch->get_process_controller();
+    processes->create_process(arch->get_context());
 
     memory_manager.mmap(0x0, 1, 0);
     *((uintptr_t*)0x0) = 55;

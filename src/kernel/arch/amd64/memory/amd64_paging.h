@@ -1,5 +1,5 @@
-#ifndef X86_PAGING_H
-#define X86_PAGING_H
+#ifndef AMD64_PAGING_H
+#define AMD64_PAGING_H
 
 #include "pagetable.h"
 
@@ -7,7 +7,7 @@
 
 namespace xenon
 {
-    class x86_paging : public paging
+    class amd64_paging : public paging
     {
         uintptr_t *kernel_pages_;
         pml4_t *kernel_directory_;
@@ -16,7 +16,7 @@ namespace xenon
         pte_t *get_page(paddr_t top_dir, vaddr_t vaddr, bool make);
 
     public:
-        x86_paging()
+        amd64_paging()
         {
 
         }
@@ -29,4 +29,4 @@ namespace xenon
     }; 
 }
 
-#endif // X86_PAGING_H
+#endif // AMD64_PAGING_H

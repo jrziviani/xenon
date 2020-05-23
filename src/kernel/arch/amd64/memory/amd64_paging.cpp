@@ -1,9 +1,9 @@
-#include "x86_paging.h"
+#include "amd64_paging.h"
 #include "config.h"
 
 #include <klib/logger.h>
 #include <memory/allocators.h>
-#include <arch/x86_64/instructions.h>
+#include <arch/amd64/instructions.h>
 
 #define PTE(addr)       ((ptr_from(addr) >> 12) & 0x1ff)
 #define PDE(addr)       ((ptr_from(addr) >> 21) & 0x1ff)
@@ -47,7 +47,7 @@ namespace xenon
      *                       ...     0x9010    |    0xN2000
      *                               ...      ...   ...
      */ 
-    pte_t *x86_paging::get_page(paddr_t top_dir, vaddr_t vaddr, bool make)
+    pte_t *amd64_paging::get_page(paddr_t top_dir, vaddr_t vaddr, bool make)
     {
         auto pml4 = PML4(vaddr);
         auto pdpt = PDPT(vaddr);
@@ -106,7 +106,7 @@ namespace xenon
         return reinterpret_cast<pte_t*>(ADDRESS(pde_table->dirs[pde]));
     }
 
-    void x86_paging::unmap(paddr_t top_dir, vaddr_t vaddr)
+    void amd64_paging::unmap(paddr_t top_dir, vaddr_t vaddr)
     {
         auto addr = ptr_from(vaddr);
         auto pml4 = PML4(addr);
@@ -142,12 +142,12 @@ namespace xenon
         tlb_flush(0);
     }
 
-    void x86_paging::unmap(vaddr_t vaddr)
+    void amd64_paging::unmap(vaddr_t vaddr)
     {
         unmap(get_current_page(), vaddr);
     }
 
-    int x86_paging::map(paddr_t dir, vaddr_t vaddr, paddr_t paddr, uint8_t flags)
+    int amd64_paging::map(paddr_t dir, vaddr_t vaddr, paddr_t paddr, uint8_t flags)
     {
         (void)flags;
 
@@ -161,7 +161,7 @@ namespace xenon
         return 0;
     }
 
-    int x86_paging::map(vaddr_t vaddr, paddr_t paddr, uint8_t flags)
+    int amd64_paging::map(vaddr_t vaddr, paddr_t paddr, uint8_t flags)
     {
         return map(get_current_page(), vaddr, paddr, flags);
     }

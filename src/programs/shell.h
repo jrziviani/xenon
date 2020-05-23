@@ -7,4 +7,4 @@ public:
     int main_loop();
 };
 
-#endif
+#endif // SHELL_H

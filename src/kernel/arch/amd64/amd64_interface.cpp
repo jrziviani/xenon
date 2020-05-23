@@ -1,17 +1,17 @@
-#include "x86_interface.h"
-#include "x86_timer.h"
-#include "segments.h"
+#include "amd64_interface.h"
 #include "memory/pagetable.h"
-#include "memory/x86_context.h"
-#include "memory/x86_paging.h"
+#include "memory/amd64_paging.h"
+#include "proc/amd64_context.h"
+#include "proc/amd64_process_controller.h"
+#include "driver/amd64_timer.h"
+#include "bootstrap/segments.h"
 
 #include <timer.h>
 #include <memory/allocators.h>
-#include <memory/context.h>
 
 namespace xenon
 {
-    int x86_interface::init_interrupts()
+    int amd64_interface::init_interrupts()
     {
         segments::idt_setup();
         segments::gdt_setup();
@@ -19,28 +19,36 @@ namespace xenon
         return 0;
     }
 
-    int x86_interface::init_paging()
+    int amd64_interface::init_paging()
     {
         map_kernel_memory();
 
-        auto place = reinterpret_cast<paging*>(placement_kalloc(sizeof(x86_paging)));
-        paging_ = new (place) x86_paging();
+        auto place = reinterpret_cast<paging*>(placement_kalloc(sizeof(amd64_paging)));
+        paging_ = new (place) amd64_paging();
 
         return 0;
     }
 
-    int x86_interface::init_timer()
+    int amd64_interface::init_timer()
     {
-        auto place = reinterpret_cast<timer*>(placement_kalloc(sizeof(x86_timer)));
-        timer_ = new (place) x86_timer(10);
+        auto place = reinterpret_cast<timer*>(placement_kalloc(sizeof(amd64_timer)));
+        timer_ = new (place) amd64_timer(10);
 
         return 0;
     }
 
-    int x86_interface::create_context()
+    int amd64_interface::create_context()
     {
-        auto place = reinterpret_cast<context*>(placement_kalloc(sizeof(x86_context)));
-        context_ = new (place) x86_context();
+        auto place = reinterpret_cast<context*>(placement_kalloc(sizeof(amd64_context)));
+        context_ = new (place) amd64_context();
+
+        return 0;
+    }
+
+    int amd64_interface::create_process_controller(manager &memory_manager)
+    {
+        auto place = reinterpret_cast<process_controller*>(placement_kalloc(sizeof(amd64_process_controller)));
+        process_controller_ = new (place) amd64_process_controller(memory_manager);
 
         return 0;
     }

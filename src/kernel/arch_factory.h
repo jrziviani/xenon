@@ -6,13 +6,13 @@
 #include <klib/new.h>
 
 #include <memory/allocators.h>
-#include <arch/x86_64/x86_interface.h>
+#include <arch/amd64/amd64_interface.h>
 
 namespace xenon
 {
     enum class ARCHITECTURES
     {
-        X86_64,
+        AMD64,
         ARM,
         PPC64LE,
     };
@@ -37,9 +37,9 @@ namespace xenon
      */
     arch_interface *set_architecture(ARCHITECTURES arch)
     {
-        if (arch == ARCHITECTURES::X86_64) {
-            x86_interface *place = reinterpret_cast<x86_interface*>(placement_kalloc(sizeof(x86_interface)));
-            return new (place) x86_interface();
+        if (arch == ARCHITECTURES::AMD64) {
+            amd64_interface *place = reinterpret_cast<amd64_interface*>(placement_kalloc(sizeof(amd64_interface)));
+            return new (place) amd64_interface();
         }
 
         return nullptr;

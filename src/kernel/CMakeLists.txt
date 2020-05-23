@@ -16,7 +16,7 @@ set_target_properties(kernel PROPERTIES
                       LINK_FLAGS "-T ${LINKER_SCRIPT} ${LFLAGS}")
 
 target_link_libraries(kernel LINK_PUBLIC
-                      x86_64.o
+                      amd64.o
                       proc.o
                       memory.o
                       appendix.o)
@@ -24,7 +24,7 @@ target_link_libraries(kernel LINK_PUBLIC
 add_custom_command(TARGET kernel PRE_LINK
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                    COMMAND ${CMAKE_COMMAND} -E echo "Copying LD script"
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/src/kernel/arch/x86_64/kernel.ld ./src/kernel)
+                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/src/kernel/arch/amd64/bootstrap/kernel.ld ./src/kernel)
 
 add_custom_command(TARGET kernel POST_BUILD
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

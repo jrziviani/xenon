@@ -1,7 +1,7 @@
-#include "x86_timer.h"
-#include "instructions.h"
-#include "exception.h"
+#include "amd64_timer.h"
 
+#include <arch/amd64/bootstrap/exception.h>
+#include <arch/amd64/instructions.h>
 #include <klib/logger.h>
 
 const uint16_t DATA_PORT_0  = 0x40;
@@ -13,7 +13,7 @@ const uint32_t PIT_CLOCK = 1193180;
 
 namespace xenon
 {
-    x86_timer::x86_timer(uint64_t frequency) :
+    amd64_timer::amd64_timer(uint64_t frequency) :
         frequency_(frequency),
         tick_(0)
     {
@@ -32,12 +32,12 @@ namespace xenon
         assign_irq(0, this);
     }
 
-    x86_timer::~x86_timer()
+    amd64_timer::~amd64_timer()
     {
         unassign_irq(0);
     }
 
-    void x86_timer::on_time(uint64_t freq)
+    void amd64_timer::on_time(uint64_t freq)
     {
         for (auto obj : registered_) {
             obj->on_time(freq);

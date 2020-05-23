@@ -1,22 +1,22 @@
-#ifndef X86_TIMER_H
-#define X86_TIMER_H
+#ifndef AMD64_TIMER_H
+#define AMD64_TIMER_H
 
 #include <klib/stdint.h>
 #include <klib/timer.h>
 
 namespace xenon
 {
-    class x86_timer : public timer
+    class amd64_timer : public timer
     {
         uint64_t frequency_;
         uint64_t tick_;
 
     public:
-        x86_timer(uint64_t frequency);
-        ~x86_timer();
+        amd64_timer(uint64_t frequency);
+        ~amd64_timer();
 
         void on_time(uint64_t freq) final;
     };
 }
 
-#endif // X86_TIMER_H
+#endif // AMD64_TIMER_H

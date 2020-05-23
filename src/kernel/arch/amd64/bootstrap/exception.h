@@ -1,7 +1,7 @@
 #ifndef EXCEPTION_H
 #define EXCEPTION_H
 
-#include "regs.h"
+#include <arch/amd64/regs.h>
 
 #include <klib/logger.h>
 #include <klib/xenon_base.h>

@@ -1,18 +1,13 @@
-#ifndef TASK_H
-#define TASK_H
+#ifndef PROCESS_H
+#define PROCESS_H
 
-#include <memory/paging.h>
-#include <memory/context.h>
-#include <memory/manager.h>
+#include "context.h"
 
 #include <config.h>
-#include <klib/llist.h>
-#include <arch/x86_64/regs.h>
+#include <arch/amd64/regs.h>
 
 namespace xenon
 {
-    const int NCPU = 1;
-
     /* states
                                    +-(scheduled/descheduled)
        +---------+    +-------+  |  +---------+    .............
@@ -24,7 +19,7 @@ namespace xenon
                           +---------| sleeping |  +->| zombie |
                                     +----------+     +--------+
     */
-    enum class TASK_STATE : uint8_t
+    enum class PROC_STATE : uint8_t
     {
         CREATED,
         READY,
@@ -33,23 +28,23 @@ namespace xenon
         ZOMBIE,
     };
 
-    inline const char *task_state_name(TASK_STATE state)
+    inline const char *task_state_name(PROC_STATE state)
     {
         switch (state)
         {
-            case TASK_STATE::CREATED:
+            case PROC_STATE::CREATED:
                 return "created";
 
-            case TASK_STATE::READY:
+            case PROC_STATE::READY:
                 return "ready";
 
-            case TASK_STATE::RUNNING:
+            case PROC_STATE::RUNNING:
                 return "running";
 
-            case TASK_STATE::SLEEPING:
+            case PROC_STATE::SLEEPING:
                 return "sleeping";
 
-            case TASK_STATE::ZOMBIE:
+            case PROC_STATE::ZOMBIE:
                 return "zombie";
 
             default:
@@ -57,71 +52,33 @@ namespace xenon
         }
     }
 
-    /* task
-
-       each task knows about its parent only, the controller knows
-       the order
-
-       +-----------+   +-----------+   +-----------+
-       | process 1 |   | process 3 |   | process O |
-       +-----------+   +-----------+   +-----------+
-             ^               ^
-             |               |
-       +-----+-----+   +-----+-----+
-       | process 2 |   | process M |
-       +------------   +-----------+
-             ^
-             |
-       +-----+-----+
-       | process N |
-       +-----------+
-    */
-
-    class task
+    class process
     {
         pid_t      pid_;
         context    *context_;
-        task       *parent_;
+        process    *parent_;
         size_t     stack_len_;
         size_t     code_len_;
 
-        TASK_STATE state_;
+        PROC_STATE state_;
 
     public:
-        task(context *ctx);
+        virtual void switch_process(process *newp) = 0;
 
+    public:
+        process(context *ctx);
+        virtual ~process() = default;
+
+    public:
         size_t     get_stack_len() const;
         size_t     get_code_len()  const;
         pid_t      get_pid()       const;
-        task      *get_parent();
-        TASK_STATE get_state()     const;
+        process    *get_parent();
+        context    *get_context();
+        PROC_STATE get_state()     const;
 
-        void       set_state(TASK_STATE state);
-    };
-
-    class task_controller
-    {
-        using ready_queue = llist<task*>;
-
-        ready_queue ready_queue_;
-        task *running_;
-        manager &memory_manager_;
-
-
-    private:
-        void switch_task();
-
-    public:
-        task_controller(manager &memory_manager);
-
-        void init_multitasking();
-
-        void create(context *ctx);
-        pid_t fork();
-        void exec();
-        void signal();
-        TASK_STATE state();
+        void       set_state(PROC_STATE state);
     };
 }
 
-#endif // TASK_H
+#endif // PROCESS_H

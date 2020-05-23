@@ -78,7 +78,7 @@ IRQ(13);
 IRQ(14);
 IRQ(15);
 
-.macro save_context
+.macro save_regs
     push %rdi;
     push %rsi;
     push %rbp;
@@ -96,7 +96,7 @@ IRQ(15);
     push %rax;
 .endm
 
-.macro restore_context
+.macro restore_regs
     pop %rax;
     pop %rbx;
     pop %rcx;
@@ -116,7 +116,7 @@ IRQ(15);
 
 FN_HEADER(isr_handler)
     mov $1, %r15
-    save_context
+    save_regs
 
     mov %ds, %ax
     push %rax
@@ -128,12 +128,12 @@ FN_HEADER(isr_handler)
     mov %ax, %ds
     mov %ax, %ds
 
-    restore_context
+    restore_regs
     add $16, %rsp
     iretq
 
 FN_HEADER(irq_handler)
-    save_context
+    save_regs
 
     mov %ds, %ax
     push %rax
@@ -145,6 +145,6 @@ FN_HEADER(irq_handler)
     mov %ax, %ds
     mov %ax, %ds
 
-    restore_context
+    restore_regs
     add $16, %rsp
     iretq

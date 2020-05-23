@@ -2,5 +2,5 @@
 
 int shell::main_loop()
 {
-    
+    return 0;
 }

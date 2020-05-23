@@ -1,5 +1,6 @@
 #include "exception.h"
-#include "instructions.h"
+
+#include <arch/amd64/instructions.h>
 
 const uint8_t MAX_INTERRUPT_HANDLERS = 16;
 
