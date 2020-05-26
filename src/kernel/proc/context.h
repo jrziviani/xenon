@@ -12,6 +12,7 @@ namespace xenon
     public:
         virtual ~context()               = 0;
         virtual context_regs *get_regs() = 0;
+        virtual void save()              = 0;
     };
 }
 

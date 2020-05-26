@@ -10,6 +10,7 @@ set(LINKER_SCRIPT "kernel.ld")
 set(LFLAGS "-fno-PIC -fno-pie -fno-exceptions -fno-rtti -mno-red-zone -mcmodel=kernel -nostdlib -lgcc -Wl,-z,max-page-size=${MAX_PAGE_SIZE}")
 
 add_executable(kernel
+               klib/new.cpp
                main.cpp)
 
 set_target_properties(kernel PROPERTIES

@@ -1,5 +1,5 @@
-add_library(memory.o OBJECT manager.cpp
-                            heap.cpp
-                            allocators.cpp
+add_library(memory.o OBJECT physical.cpp
                             virtual.cpp
-                            physical.cpp)
+                            heap.cpp
+                            manager.cpp
+                            allocators.cpp)

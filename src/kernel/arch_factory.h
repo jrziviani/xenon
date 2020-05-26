@@ -4,8 +4,6 @@
 #include "arch_interface.h"
 
 #include <klib/new.h>
-
-#include <memory/allocators.h>
 #include <arch/amd64/amd64_interface.h>
 
 namespace xenon
@@ -38,8 +36,7 @@ namespace xenon
     arch_interface *set_architecture(ARCHITECTURES arch)
     {
         if (arch == ARCHITECTURES::AMD64) {
-            amd64_interface *place = reinterpret_cast<amd64_interface*>(placement_kalloc(sizeof(amd64_interface)));
-            return new (place) amd64_interface();
+            return new amd64_interface();
         }
 
         return nullptr;

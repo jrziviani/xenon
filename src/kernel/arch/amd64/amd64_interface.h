@@ -15,8 +15,7 @@ namespace xenon
         int init_interrupts()           final;
         int init_paging()               final;
         int init_timer()                final;
-        int create_context()            final;
-        int create_process_controller(manager &memory_manager) final;
+        int init_processes()            final;
     };
 }
 

@@ -27,23 +27,6 @@ namespace xenon
         }
     }
 
-    void physical::free(paddr_t addr)
-    {
-        // sanity check: there's no reason to have a unaligned address
-        // here as well as we have the physical_end_ limit.
-        if (!IS_ALIGNED(ptr_from(addr)) || addr >= physical_end_) {
-            logger::instance().log("PANIC: free 0x%x", ptr_from(addr));
-            return;
-        }
-
-        // create a node containing the physical address as value and push
-        // it into the list
-        frame *new_head = reinterpret_cast<frame*>(placement_kalloc(sizeof(frame)));
-        new_head->address = addr;
-        new_head->previous = free_list_;
-        free_list_ = new_head;
-    }
-
     paddr_t physical::alloc()
     {
         // our list contains the free page frames, allocate a frame means
@@ -89,5 +72,22 @@ namespace xenon
         }
 
         return addr;
+    }
+
+    void physical::free(paddr_t addr)
+    {
+        // sanity check: there's no reason to have a unaligned address
+        // here as well as we have the physical_end_ limit.
+        if (!IS_ALIGNED(ptr_from(addr)) || addr >= physical_end_) {
+            logger::instance().log("PANIC: free 0x%x", ptr_from(addr));
+            return;
+        }
+
+        // create a node containing the physical address as value and push
+        // it into the list
+        frame *new_head = reinterpret_cast<frame*>(placement_kalloc(sizeof(frame)));
+        new_head->address = addr;
+        new_head->previous = free_list_;
+        free_list_ = new_head;
     }
 }

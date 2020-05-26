@@ -3,7 +3,6 @@
 
 #include "process.h"
 
-#include <memory/manager.h>
 #include <klib/llist.h>
 
 namespace xenon
@@ -35,19 +34,21 @@ namespace xenon
 
         ready_queue ready_queue_;
         process *running_;
-        manager &memory_manager_;
 
     private:
         void switch_to(process *proc);
 
     public:
-        process_controller(manager &memory_manager);
+        process_controller();
 
+        void set_running(pid_t pid);
         void set_running(process *proc);
         void set_running_from_queue();
 
+        void user_init();
+
     public:
-        virtual void create_process(context *ctx) = 0;
+        virtual pid_t create_process(context *ctx) = 0;
     };
 }
 

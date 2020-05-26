@@ -8,10 +8,10 @@ namespace xenon
     class amd64_process_controller : public process_controller
     {
     public:
-        amd64_process_controller(manager &memory_manager);
+        amd64_process_controller();
 
     public:
-        void create_process(context *ctx) final;
+        pid_t create_process(context *ctx) final;
     };
 }
 

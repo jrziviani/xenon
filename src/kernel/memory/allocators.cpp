@@ -1,4 +1,5 @@
 #include "allocators.h"
+#include "manager.h"
 
 #include <config.h>
 
@@ -8,7 +9,7 @@ namespace xenon
 {
     uintptr_t __placement = reinterpret_cast<uintptr_t>(&_end);
 
-    paddr_t placement_kalloc(size_t size, paddr_t *paddr, bool align/*=false*/)
+    vaddr_t placement_kalloc(size_t size, paddr_t *paddr, bool align/*=false*/)
     {
         if (align) {
             __placement = ALIGN_UP(__placement);
@@ -21,10 +22,19 @@ namespace xenon
         return ret;
     }
 
-    paddr_t placement_kalloc(size_t size, bool align/*=false*/)
+    vaddr_t placement_kalloc(size_t size, bool align/*=false*/)
     {
         paddr_t tmp;
         return placement_kalloc(size, &tmp, align);
+    }
+
+    vaddr_t kalloc(size_t size)
+    {
+        if (manager::instance().is_initialized()) {
+            return manager::instance().kalloc(size);
+        }
+
+        return placement_kalloc(size);
     }
 
     void kfree_block(size_t size)
@@ -36,6 +46,13 @@ namespace xenon
         }
         */
         __placement -= size;
+    }
+
+    void kfree(vaddr_t addr)
+    {
+        if (manager::instance().is_initialized()) {
+            return manager::instance().kfree(addr);
+        }
     }
 
     uintptr_t current()

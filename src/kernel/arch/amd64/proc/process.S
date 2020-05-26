@@ -1,6 +1,6 @@
 #include "amd64_context.h"
 
-.macro save_context
+.macro _m_save_context
     movq    (%rsp), %rax;
     movq    %rax,   CONTEXT_RIP(%rdi);
 
@@ -22,7 +22,7 @@
     movq    %rax,   CONTEXT_CR4(%rdi);
 .endm
 
-.macro restore_context
+.macro _m_restore_context
     movq    CONTEXT_R15(%rsi), %r15;
     movq    CONTEXT_R14(%rsi), %r14;
     movq    CONTEXT_R13(%rsi), %r13;
@@ -44,14 +44,25 @@
     movq    %rax,              (%rsp);
 .endm
 
+.global save_context
+.type save_context,@function
+save_context:
+    pushq   %rbp;
+    movq    %rsp, %rbp;
+
+    _m_save_context;
+
+    leaveq
+    retq
+
 .global switch_context
 .type switch_context,@function
 switch_context:
     pushq   %rbp;
     movq    %rsp, %rbp;
 
-    save_context;
-    restore_context;
+    _m_save_context;
+    _m_restore_context;
 
     leaveq
     retq

@@ -5,9 +5,9 @@
 
 namespace xenon
 {
-    manager::manager(multiboot_info_t *info, paging *pg) :
-        paging_(pg)
+    void manager__::initialize(multiboot_info_t *info, paging *pg)
     {
+        paging_ = pg;
         // for now, and maybe forever, this code relies on the information
         // given by the multiboot protocol, implemented by the bootloader.
         // professional operating systems prefer to gather HW information by
@@ -19,7 +19,7 @@ namespace xenon
 
                 // ignore lower memory for while ...
                 if (mmap->addr != 0x0) {
-                    logger::instance().log("Physical Address: 0x%x, Length: %d",
+                    logger::instance().log(" > Physical Address: 0x%x, Length: %d",
                                            mmap->addr,
                                            mmap->len);
 
@@ -33,9 +33,15 @@ namespace xenon
         }
 
         heap_.setup(ptr_to<vaddr_t>(KVIRTUAL_ADDRESS + 8_MB), 16_MB);
+        initialized_ = true;
     }
 
-    int manager::mmap(vaddr_t addr, size_t size, uint8_t flags)
+    bool manager__::is_initialized() const
+    {
+        return initialized_;
+    }
+
+    int manager__::mmap(vaddr_t addr, size_t size, uint8_t flags)
     {
         // reserve a contiguous virtual address space starting at addr
         // up to size. note that the function will fail if the address is
@@ -57,19 +63,19 @@ namespace xenon
         return paging_->map(addr, physical, flags);
     }
 
-    void manager::unmap(vaddr_t addr, size_t size)
+    void manager__::unmap(vaddr_t addr, size_t size)
     {
         (void)size;
 
         paging_->unmap(addr);
     }
 
-    vaddr_t manager::kalloc(size_t size)
+    vaddr_t manager__::kalloc(size_t size)
     {
         return heap_.alloc(size);
     }
 
-    void manager::kfree(vaddr_t addr)
+    void manager__::kfree(vaddr_t addr)
     {
         heap_.dealloc(addr);
     }

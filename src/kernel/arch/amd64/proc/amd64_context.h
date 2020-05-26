@@ -25,8 +25,7 @@
             uint64_t cr4;
         };
 
-        extern "C" void save_context(context_regs regs);
-        extern "C" void restore_context(context_regs regs);
+        extern "C" void save_context(context_regs *regs);
 
         class amd64_context : public context
         {
@@ -40,6 +39,11 @@
             context_regs *get_regs() final
             {
                 return &regs_;
+            }
+
+            void save() final
+            {
+                save_context(&regs_);
             }
         };
     }

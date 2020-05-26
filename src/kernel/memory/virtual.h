@@ -3,6 +3,7 @@
 
 #include <klib/stdint.h>
 #include <klib/llist.h>
+#include <klib/new.h>
 
 namespace xenon
 {
@@ -38,7 +39,7 @@ namespace xenon
         };
 
     private:
-        llist<node*> allocated_list_;
+        llist<node*, placement_new> allocated_list_;
 
     public:
         virt();

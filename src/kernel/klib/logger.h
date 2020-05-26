@@ -30,6 +30,7 @@ namespace xenon
         logger__()
         {
             out_ = logger_output::VGA;
+            term_.clear();
         }
 
         ~logger__()

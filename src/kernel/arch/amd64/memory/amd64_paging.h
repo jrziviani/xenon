@@ -18,14 +18,19 @@ namespace xenon
     public:
         amd64_paging()
         {
+        }
 
+        ~amd64_paging()
+        {
         }
 
         int map(paddr_t top_dir, vaddr_t vaddr, paddr_t paddr, uint8_t flags) final;
         int map(vaddr_t vaddr, paddr_t paddr, uint8_t flags)                  final;
 
-        void unmap(paddr_t top_dir, vaddr_t vaddr)                            final;
-        void unmap(vaddr_t vaddr)                                             final;
+        void unmap(paddr_t top_dir, vaddr_t vaddr) final;
+        void unmap(vaddr_t vaddr)                  final;
+
+        paddr_t create_top_page_directory() final;
     }; 
 }
 

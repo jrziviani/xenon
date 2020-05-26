@@ -9,6 +9,9 @@ namespace xenon
     vaddr_t placement_kalloc(size_t size, bool align=false);
     void kfree_block(size_t size);
 
+    vaddr_t kalloc(size_t size);
+    void kfree(vaddr_t addr);
+
     uintptr_t current();
 }
 

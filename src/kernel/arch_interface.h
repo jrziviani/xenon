@@ -71,9 +71,7 @@ namespace xenon
         virtual int init_timer()                = 0;
         virtual int init_paging()               = 0;
         virtual int init_interrupts()           = 0;
-
-        virtual int create_context()            = 0;
-        virtual int create_process_controller(manager &memory_manager) = 0;
+        virtual int init_processes()            = 0;
     };
 }
 

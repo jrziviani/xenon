@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #define KPHYSICAL_ADDRESS    0x400000
-#define KVIRTUAL_ADDRESS     0xffffffff80000000
+#define KVIRTUAL_ADDRESS     0xffffffff80000000ULL
 
 #define MAX_KERNEL_SIZE       32 * 1024 * 1024
 

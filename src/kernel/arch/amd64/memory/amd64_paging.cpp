@@ -165,4 +165,23 @@ namespace xenon
     {
         return map(get_current_page(), vaddr, paddr, flags);
     }
+
+    paddr_t amd64_paging::create_top_page_directory()
+    {
+        // creates a new map with kernel code already mapped into it
+        auto pml4_index = PML4(KVIRTUAL_ADDRESS);
+        paddr_t top_dir;
+        pml4_t *top_dir_virt = static_cast<pml4_t*>(placement_kalloc(sizeof(pml4_t), &top_dir, true));
+        memset(&top_dir_virt, 0x0, sizeof(pml4_t));
+
+        pml4_t *pml4_table = ptr_to<pml4_t*>(ADDRESS(get_current_page()));
+        if (!PRESENT(pml4_table->dirs[pml4_index])) {
+            logger::instance().log("PANIC: create top dir pagetable");
+            return nullptr;
+        }
+
+        top_dir_virt->dirs[pml4_index] = pml4_table->dirs[pml4_index];
+
+        return top_dir;
+    }
 }

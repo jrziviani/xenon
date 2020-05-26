@@ -7,7 +7,7 @@
 #include "bootstrap/segments.h"
 
 #include <timer.h>
-#include <memory/allocators.h>
+#include <klib/new.h>
 
 namespace xenon
 {
@@ -22,33 +22,33 @@ namespace xenon
     int amd64_interface::init_paging()
     {
         map_kernel_memory();
-
-        auto place = reinterpret_cast<paging*>(placement_kalloc(sizeof(amd64_paging)));
-        paging_ = new (place) amd64_paging();
+        paging_ = new amd64_paging();
 
         return 0;
     }
 
     int amd64_interface::init_timer()
     {
-        auto place = reinterpret_cast<timer*>(placement_kalloc(sizeof(amd64_timer)));
-        timer_ = new (place) amd64_timer(10);
+        timer_ = new amd64_timer(10);
 
         return 0;
     }
 
-    int amd64_interface::create_context()
+    int amd64_interface::init_processes()
     {
-        auto place = reinterpret_cast<context*>(placement_kalloc(sizeof(amd64_context)));
-        context_ = new (place) amd64_context();
-
-        return 0;
-    }
-
-    int amd64_interface::create_process_controller(manager &memory_manager)
-    {
-        auto place = reinterpret_cast<process_controller*>(placement_kalloc(sizeof(amd64_process_controller)));
-        process_controller_ = new (place) amd64_process_controller(memory_manager);
+        // https://forum.osdev.org/viewtopic.php?f=1&t=15622
+        // - create a new page directory (mapped into kernel space)
+        // - copy kernel page tables into the new page directory
+        // - setup scheduler data (thread priority, etc), and set initial RIP to a start_process kernel function
+        // - (optional) wait or block until the new thread some sort of status to return
+        // - return to caller
+        context_ = new amd64_context();
+        process_controller_ = new amd64_process_controller();
+        process_controller_->create_process(context_);
+        //processes->set_kernel_stack(initial addr, size);
+        //processes->set_user_stack(initial addr, size);
+        //processes->set_code(initial_addr, size);
+        process_controller_->set_running_from_queue();
 
         return 0;
     }

@@ -6,6 +6,7 @@
 #include "paging.h"
 #include "heap.h"
 
+#include <klib/singleton.h>
 #include <klib/multiboot.h>
 
 namespace xenon
@@ -20,15 +21,32 @@ namespace xenon
      * The heavy duty is under physical.h and virtual.h. The job here
      * is to orchestrate their work.
      */
-    class manager
+    class manager__
     {
+        friend class singleton<manager__>;
+
         physical physical_;
         virt     virtual_;
         paging  *paging_;
         heap     heap_;
+        bool     initialized_;
+
+    private:
+        manager__() :
+            paging_(nullptr),
+            initialized_(false)
+        {
+        }
 
     public:
-        manager(multiboot_info_t *info, paging *pg);
+        manager__(const manager__&) = delete;
+        manager__(manager__&&) = delete;
+        manager__ &operator=(const manager__&) = delete;
+        manager__ &&operator=(manager__&&) = delete;
+
+    public:
+        void initialize(multiboot_info_t *info, paging *pg);
+        bool is_initialized() const;
 
         int mmap(vaddr_t addr, size_t size, uint8_t flags);
         void unmap(vaddr_t addr, size_t size);
@@ -36,6 +54,8 @@ namespace xenon
         vaddr_t kalloc(size_t size);
         void kfree(vaddr_t addr);
     };
+
+    using manager = singleton<manager__>;
 }
 
 #endif // MANAGER_H

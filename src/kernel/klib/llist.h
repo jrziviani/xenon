@@ -6,7 +6,7 @@
 
 namespace xenon
 {
-    template <typename T>
+    template <typename T, class Alloc=basic_allocator>
     class llist
     {
         struct node
@@ -84,6 +84,8 @@ namespace xenon
         node *tail_;
         size_t size_;
 
+        Alloc allocator_;
+
     public:
         llist() :
             head_(nullptr),
@@ -103,13 +105,12 @@ namespace xenon
 
         void push_back(T data)
         {
-            void *place = placement_kalloc(sizeof(node));
             if (tail_ == nullptr) {
-                tail_ = new (place) node(data);
+                tail_ = allocator_.template create<node>(data);
                 head_ = tail_;
             }
             else {
-                tail_->next_ = new (place) node(data);
+                tail_->next_ = allocator_.template create<node>(data);
                 tail_ = tail_->next_;
             }
 
@@ -118,8 +119,7 @@ namespace xenon
 
         void push_front(T data)
         {
-            void *place = placement_kalloc(sizeof(node));
-            node *n = new (place) node(data);
+            node *n = allocator_.template create<node>(data);
             n->next_ = head_;
             head_ = n;
 
@@ -150,11 +150,11 @@ namespace xenon
         {
             int total = 0;
             for (node *n = head_; n != nullptr; n = n->next_) {
+                allocator_.destroy(n);
                 ++total;
             }
 
             head_ = tail_ = nullptr;
-            kfree_block(sizeof(node) * total);
             size_ = 0;
         }
 
