@@ -23,24 +23,28 @@ namespace xenon
 {
     pid_t next_pid = 0;
 
-    process::process(context *ctx) :
+    process::process(context *ctx,
+                     paddr_t kstack_addr,
+                     size_t kstack_size) :
         pid_(next_pid++),
         context_(ctx),
         parent_(nullptr),
-        stack_len_(512_KB),
-        code_len_(1_MB),
+        kstack_addr_(kstack_addr),
+        kstack_len_(kstack_size),
+        ustack_addr_(0x0),
+        ustack_len_(USTACK_SIZE),
         state_(PROC_STATE::CREATED)
     {
     }
 
-    size_t process::get_stack_len() const
+    size_t process::get_kstack_len() const
     {
-        return stack_len_;
+        return kstack_len_;
     }
 
-    size_t process::get_code_len() const
+    size_t process::get_ustack_len() const
     {
-        return code_len_;
+        return ustack_len_;
     }
 
     pid_t process::get_pid() const

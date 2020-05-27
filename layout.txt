@@ -1,0 +1,7 @@
+kernel virtual address space:  0xffffffff80000000
+kernel physical address space: 0x100000
+
+initial address:               0xffffffff80101c00
+
+kernel main stack:             0xffffffff80326000 0xffffffff80316000 = 64KB
+                               start              end

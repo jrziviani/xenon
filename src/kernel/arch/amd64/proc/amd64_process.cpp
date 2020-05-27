@@ -5,8 +5,10 @@ extern "C" void switch_context(xenon::context_regs *o, xenon::context_regs *n);
 
 namespace xenon
 {
-    amd64_process::amd64_process(context *context) :
-        process(context)
+    amd64_process::amd64_process(context *context,
+                                 paddr_t kstack_addr,
+                                 size_t kstack_size) :
+        process(context, kstack_addr, kstack_size)
     {
     }
 

@@ -44,11 +44,10 @@ namespace xenon
         // - return to caller
         context_ = new amd64_context();
         process_controller_ = new amd64_process_controller();
-        process_controller_->create_process(context_);
-        //processes->set_kernel_stack(initial addr, size);
-        //processes->set_user_stack(initial addr, size);
-        //processes->set_code(initial_addr, size);
-        process_controller_->set_running_from_queue();
+        auto pid = process_controller_->create_process(context_,
+                                                       ptr_to<paddr_t>(KSTACK_ADDR),
+                                                       KSTACK_SIZE);
+        process_controller_->set_running(pid);
 
         return 0;
     }

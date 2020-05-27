@@ -47,8 +47,12 @@ namespace xenon
 
         void user_init();
 
+        process *get_process_by_pid(pid_t pid);
+
     public:
-        virtual pid_t create_process(context *ctx) = 0;
+        virtual pid_t create_process(context *ctx,
+                                     paddr_t kstack_addr,
+                                     size_t kstack_size) = 0;
     };
 }
 

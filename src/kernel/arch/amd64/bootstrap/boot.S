@@ -269,6 +269,7 @@ _start64:
     jmp 1b
 
 .section .bss
+bootstack_end:
 .balign 4096
     .fill 0x10000, 1, 0
 bootstack:

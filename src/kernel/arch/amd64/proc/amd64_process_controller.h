@@ -11,7 +11,9 @@ namespace xenon
         amd64_process_controller();
 
     public:
-        pid_t create_process(context *ctx) final;
+        pid_t create_process(context *ctx,
+                             paddr_t kstack_addr,
+                             size_t kstack_size) final;
     };
 }
 

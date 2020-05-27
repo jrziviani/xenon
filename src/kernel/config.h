@@ -23,6 +23,10 @@
 
 #define FRAME_SIZE 4096
 
+#define KSTACK_ADDR  0xffffffff80326000
+#define KSTACK_SIZE  64 * 1024
+#define USTACK_SIZE  256 * 1024
+
 #define IS_ALIGNED(address) ((address & (FRAME_SIZE - 1)) == 0)
 #define ALIGN_DOWN(address) ((address) & (-FRAME_SIZE))
 #define ALIGN_UP(address)   ALIGN_DOWN(address + FRAME_SIZE - 1)

@@ -10,7 +10,9 @@ namespace xenon
     class amd64_process : public process
     {
     public:
-        amd64_process(context *context);
+        amd64_process(context *context,
+                      paddr_t kstack_addr,
+                      size_t kstack_size);
 
     public:
         void switch_process(process *newp) final;

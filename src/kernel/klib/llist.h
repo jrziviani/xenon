@@ -146,6 +146,26 @@ namespace xenon
             return n->data_;
         }
 
+        void remove(T data)
+        {
+            node *n;
+            for (n = head_; n != nullptr && n->data_ != data; n = n->next_) ;
+
+            if (n == nullptr) {
+                return;
+            }
+
+            if (n->previous_ != nullptr) {
+                n->previous_->next_ = n->next_;
+            }
+
+            if (n->next_ != nullptr) {
+                n->next_->previous_ = n->previous_;
+            }
+
+            delete n;
+        }
+
         void clear()
         {
             int total = 0;
