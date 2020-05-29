@@ -56,6 +56,10 @@ namespace xenon
                                      size_t kstack_size,
                                      uintptr_t program,
                                      const char *name) = 0;
+
+
+    public:
+        void exit();
     };
 }
 

@@ -7,16 +7,12 @@ namespace xenon
 {
     void program_a()
     {
-        for (int i = 0; i < 1000; i++) {
-            logger::instance().log("Running program_a");
-        }
+        logger::instance().log("Running program_a");
     }
 
     void program_b()
     {
-        for (int i = 0; i < 1000; i++) {
-            logger::instance().log("Running program_b");
-        }
+        logger::instance().log("Running program_b");
     }
 
     process_controller::process_controller()
@@ -79,18 +75,34 @@ namespace xenon
         // 4. run
     }
 
+    void process_controller::exit()
+    {
+        if (ready_queue_.empty()) {
+            return;
+        }
+
+        auto next_proc = ready_queue_.pop_front();
+        auto destroy = running_;
+        running_->switch_process(next_proc);
+        running_ = next_proc;
+        running_->set_state(PROC_STATE::RUNNING);
+
+        delete destroy;
+        destroy = nullptr;
+    }
+
     void process_controller::create_dummy_processes()
     {
-        char *kstack = new char[64_KB];
-        create_process(ptr_from(kstack),
+        create_process(0,
                        64_KB,
                        ptr_from(&program_a),
                        "[program_a]");
 
         /*
-        char new_stack_b[KSTACK_SIZE];
-        program = reinterpret_cast<vaddr_t>(&program_b);
-        create_process(new_stack_b, KSTACK_SIZE, program, 1_KB, "[program_b]");
+        create_process(ptr_from(kstackb),
+                       64_KB,
+                       ptr_from(&program_b),
+                       "[program_b]");
         */
     }
 }

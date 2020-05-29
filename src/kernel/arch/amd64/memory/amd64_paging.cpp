@@ -172,7 +172,7 @@ namespace xenon
         auto pml4_index = PML4(KVIRTUAL_ADDRESS);
         paddr_t top_dir;
         pml4_t *top_dir_virt = static_cast<pml4_t*>(placement_kalloc(sizeof(pml4_t), &top_dir, true));
-        memset(&top_dir_virt, 0x0, sizeof(pml4_t));
+        memset(top_dir_virt, 0x0, sizeof(pml4_t));
 
         pml4_t *pml4_table = ptr_to<pml4_t*>(ADDRESS(get_current_page()));
         if (!PRESENT(pml4_table->dirs[pml4_index])) {

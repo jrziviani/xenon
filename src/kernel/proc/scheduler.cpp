@@ -7,7 +7,7 @@ namespace xenon
     scheduler::scheduler(timer *t, process_controller &controller) :
         process_controller_(controller)
     {
-        //t->register_me(this);
+        t->register_me(this);
     }
 
     scheduler::~scheduler()

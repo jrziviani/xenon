@@ -14,7 +14,7 @@ namespace xenon
     {
         ctx_.get_regs()->rsi = 0;
         ctx_.get_regs()->rdi = 0;
-        ctx_.get_regs()->rsp = ptr_from(kstack_addr) + kstack_size;
+        ctx_.get_regs()->rsp = kstack_addr_;
         ctx_.get_regs()->rip = nip;
     }
 

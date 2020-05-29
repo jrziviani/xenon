@@ -1,7 +1,7 @@
 #include "process.h"
 
 #include <klib/string.h>
-
+#include <memory/manager.h>
 
 /*
     User
@@ -39,6 +39,21 @@ namespace xenon
     {
         auto len = strlen(name);
         strncpy(name_, name, (len >= 64) ? 64 : len);
+
+        if (kstack_addr == 0) {
+            char *stack = new char[kstack_size];
+            kstack_addr_ = ptr_from(stack) + kstack_len_;
+        }
+
+        top_dir_ = manager::instance().create_address_space();
+    }
+
+    process::~process()
+    {
+        char *stack = ptr_to<char*>(kstack_addr_ - kstack_len_);
+        delete[] stack;
+
+        manager::instance().destroy_address_space(top_dir_);
     }
 
     size_t process::get_kstack_len() const
