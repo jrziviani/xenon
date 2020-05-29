@@ -54,23 +54,20 @@ namespace xenon
 
     class process
     {
-        pid_t      pid_;
-        context    *context_;
-        process    *parent_;
-        paddr_t    kstack_addr_;
-        size_t     kstack_len_;
-        paddr_t    ustack_addr_;
-        size_t     ustack_len_;
-
-        PROC_STATE state_;
-
-    public:
-        virtual void switch_process(process *newp) = 0;
+        pid_t       pid_;
+        process     *parent_;
+        uintptr_t   kstack_addr_;
+        size_t      kstack_len_;
+        uintptr_t   ustack_addr_;
+        size_t      ustack_len_;
+        char        name_[64];
+        PROC_STATE  state_;
 
     public:
-        process(context *ctx,
-                paddr_t kstack_addr,
-                size_t kstack_size);
+        process(uintptr_t kstack_addr,
+                size_t kstack_size,
+                uintptr_t nip,
+                const char *name);
 
         virtual ~process() = default;
 
@@ -80,9 +77,14 @@ namespace xenon
         pid_t      get_pid()        const;
         PROC_STATE get_state()      const;
         process    *get_parent();
-        context    *get_context();
 
         void       set_state(PROC_STATE state);
+        void       set_parent(process *parent);
+
+    public:
+        virtual context *get_context()                 = 0;
+        virtual void switch_process(process *newp)     = 0;
+        virtual void set_program_address(vaddr_t addr) = 0;
     };
 }
 

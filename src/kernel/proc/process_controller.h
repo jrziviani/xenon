@@ -45,14 +45,17 @@ namespace xenon
         void set_running(process *proc);
         void set_running_from_queue();
 
+        void create_dummy_processes();
+
         void user_init();
 
         process *get_process_by_pid(pid_t pid);
 
     public:
-        virtual pid_t create_process(context *ctx,
-                                     paddr_t kstack_addr,
-                                     size_t kstack_size) = 0;
+        virtual pid_t create_process(uintptr_t kstack_addr,
+                                     size_t kstack_size,
+                                     uintptr_t program,
+                                     const char *name) = 0;
     };
 }
 

@@ -3,6 +3,7 @@
 #include <klib/timer.h>
 #include <memory/manager.h>
 #include <proc/process_controller.h>
+#include <proc/scheduler.h>
 
 #include "arch_factory.h"
 #include "config.h"
@@ -37,7 +38,8 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     if (bootinfo->flags & MULTIBOOT_INFO_CMDLINE) {
         uintptr_t cmdline = bootinfo->cmdline + KVIRTUAL_ADDRESS;
-        logger::instance().log("[multiboot] cmdline: %s", reinterpret_cast<char*>(cmdline));
+        logger::instance().log("[multiboot] cmdline: %s",
+                               reinterpret_cast<char*>(cmdline));
     }
 
     logger::instance().log("Initializing IDT");
@@ -54,4 +56,20 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     logger::instance().log("Initializing timers");
     arch->init_timer();
+
+    logger::instance().log("Initializing scheduler");
+    scheduler simple_scheduler(arch->get_timer(),
+                               *arch->get_process_controller());
+
+    process_controller *p = arch->get_process_controller();
+    p->create_dummy_processes();
+
+    p->set_running_from_queue();
+    p->set_running_from_queue();
+    p->set_running_from_queue();
+    p->set_running_from_queue();
+
+    while (true) {
+        // ...
+    }
 }

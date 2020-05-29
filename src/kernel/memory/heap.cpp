@@ -59,7 +59,8 @@ namespace xenon
             return true;
         };
 
-        free_heap_.foreach(best_slot);
+        // TODO: BUG HERE
+        //free_heap_.foreach(best_slot);
 
         if (addr == nullptr) {
             node *n = expand(size);

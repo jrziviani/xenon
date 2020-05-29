@@ -42,7 +42,5 @@ namespace xenon
         for (auto obj : registered_) {
             obj->on_time(freq);
         }
-
-        //logger::instance().log("%d: on time :-)", freq);
     }
 }

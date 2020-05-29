@@ -9,11 +9,16 @@ namespace xenon
     {
     }
 
-    pid_t amd64_process_controller::create_process(context *ctx,
-                                                   paddr_t kstack_addr,
-                                                   size_t kstack_size)
+    pid_t amd64_process_controller::create_process(uintptr_t kstack_addr,
+                                                   size_t kstack_size,
+                                                   uintptr_t program,
+                                                   const char *name)
     {
-        process *proc = new amd64_process(ctx, kstack_addr, kstack_size);
+        process *proc = new amd64_process(kstack_addr,
+                                          kstack_size,
+                                          program,
+                                          name);
+
         proc->set_state(PROC_STATE::READY);
         ready_queue_.push_back(proc);
 

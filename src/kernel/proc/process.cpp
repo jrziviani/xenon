@@ -1,5 +1,7 @@
 #include "process.h"
 
+#include <klib/string.h>
+
 
 /*
     User
@@ -23,11 +25,11 @@ namespace xenon
 {
     pid_t next_pid = 0;
 
-    process::process(context *ctx,
-                     paddr_t kstack_addr,
-                     size_t kstack_size) :
+    process::process(uintptr_t kstack_addr,
+                     size_t kstack_size,
+                     uintptr_t nip,
+                     const char *name) :
         pid_(next_pid++),
-        context_(ctx),
         parent_(nullptr),
         kstack_addr_(kstack_addr),
         kstack_len_(kstack_size),
@@ -35,6 +37,8 @@ namespace xenon
         ustack_len_(USTACK_SIZE),
         state_(PROC_STATE::CREATED)
     {
+        auto len = strlen(name);
+        strncpy(name_, name, (len >= 64) ? 64 : len);
     }
 
     size_t process::get_kstack_len() const
@@ -57,11 +61,6 @@ namespace xenon
         return parent_;
     }
 
-    context *process::get_context()
-    {
-        return context_;
-    }
-
     PROC_STATE process::get_state() const
     {
         return state_;
@@ -70,5 +69,10 @@ namespace xenon
     void process::set_state(PROC_STATE state)
     {
         state_ = state;
+    }
+
+    void process::set_parent(process *parent)
+    {
+        parent_ = parent;
     }
 }

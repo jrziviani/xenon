@@ -23,6 +23,8 @@
             uint64_t cr2;
             uint64_t cr3;
             uint64_t cr4;
+            uint64_t rdi;
+            uint64_t rsi;
         };
 
         extern "C" void save_context(context_regs *regs);
@@ -62,6 +64,8 @@
     #define CONTEXT_CR2(base) 0x48(base)
     #define CONTEXT_CR3(base) 0x50(base)
     #define CONTEXT_CR4(base) 0x58(base)
+    #define CONTEXT_RDI(base) 0x60(base)
+    #define CONTEXT_RSI(base) 0x68(base)
 
 /*
     #define ADDRESSING(val) val

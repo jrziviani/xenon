@@ -42,11 +42,11 @@ namespace xenon
         // - setup scheduler data (thread priority, etc), and set initial RIP to a start_process kernel function
         // - (optional) wait or block until the new thread some sort of status to return
         // - return to caller
-        context_ = new amd64_context();
         process_controller_ = new amd64_process_controller();
-        auto pid = process_controller_->create_process(context_,
-                                                       ptr_to<paddr_t>(KSTACK_ADDR),
-                                                       KSTACK_SIZE);
+        auto pid = process_controller_->create_process(KSTACK_ADDR,
+                                                       KSTACK_SIZE,
+                                                       0,
+                                                       "[kernel]");
         process_controller_->set_running(pid);
 
         return 0;

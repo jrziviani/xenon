@@ -103,6 +103,11 @@ namespace xenon
             return size_;
         }
 
+        bool empty() const
+        {
+            return size_ == 0;
+        }
+
         void push_back(T data)
         {
             if (tail_ == nullptr) {

@@ -1,9 +1,24 @@
 #include "process_controller.h"
 
 #include <memory/paging.h>
+#include <klib/logger.h>
 
 namespace xenon
 {
+    void program_a()
+    {
+        for (int i = 0; i < 1000; i++) {
+            logger::instance().log("Running program_a");
+        }
+    }
+
+    void program_b()
+    {
+        for (int i = 0; i < 1000; i++) {
+            logger::instance().log("Running program_b");
+        }
+    }
+
     process_controller::process_controller()
     {
     }
@@ -24,7 +39,16 @@ namespace xenon
 
     void process_controller::set_running_from_queue()
     {
-        set_running(ready_queue_.pop_back());
+        if (ready_queue_.empty()) {
+            return;
+        }
+
+        auto next_proc = ready_queue_.pop_front();
+        running_->switch_process(next_proc);
+        running_->set_state(PROC_STATE::READY);
+        ready_queue_.push_back(running_);
+        running_ = next_proc;
+        running_->set_state(PROC_STATE::RUNNING);
     }
 
     void process_controller::user_init()
@@ -53,5 +77,20 @@ namespace xenon
         // 2. add current_ process into ready_queue_
         // 3. setup proc context
         // 4. run
+    }
+
+    void process_controller::create_dummy_processes()
+    {
+        char *kstack = new char[64_KB];
+        create_process(ptr_from(kstack),
+                       64_KB,
+                       ptr_from(&program_a),
+                       "[program_a]");
+
+        /*
+        char new_stack_b[KSTACK_SIZE];
+        program = reinterpret_cast<vaddr_t>(&program_b);
+        create_process(new_stack_b, KSTACK_SIZE, program, 1_KB, "[program_b]");
+        */
     }
 }
