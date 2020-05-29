@@ -53,6 +53,9 @@ namespace xenon
 
         vaddr_t kalloc(size_t size);
         void kfree(vaddr_t addr);
+
+        paddr_t create_address_space();
+        void destroy_address_space(paddr_t addr);
     };
 
     using manager = singleton<manager__>;

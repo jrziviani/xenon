@@ -25,13 +25,13 @@ namespace xenon
         size_ = size;
     }
 
-    heap::node *heap::expand(size_t size)
+    heap::space *heap::expand(size_t size)
     {
-        node *n = new (start_) node(start_, size);
+        space *n = new (start_) space(start_, size);
         free_heap_.insert(n);
 
-        start_ = static_cast<char*>(start_) + size + sizeof(node);
-        size_ -= size - sizeof(node);
+        start_ = static_cast<char*>(start_) + size + sizeof(space);
+        size_ -= size - sizeof(space);
 
         return n;
     }
@@ -43,7 +43,7 @@ namespace xenon
         }
 
         vaddr_t addr = nullptr;
-        auto best_slot = [&addr, size](node *n) -> bool {
+        auto best_slot = [&addr, size](space *n) -> bool {
             if (size > n->size || n->free == false) {
                 return false;
             }
@@ -59,11 +59,10 @@ namespace xenon
             return true;
         };
 
-        // TODO: BUG HERE
-        //free_heap_.foreach(best_slot);
+        free_heap_.foreach(best_slot);
 
         if (addr == nullptr) {
-            node *n = expand(size);
+            space *n = expand(size);
             n->free = false;
             addr = n->addr;
         }
@@ -77,7 +76,7 @@ namespace xenon
             // PANIC
         }
 
-        node *n = static_cast<node*>(addr) - 16;
+        space *n = static_cast<space*>(addr) - 16;
         n->free = true;
     }
 }

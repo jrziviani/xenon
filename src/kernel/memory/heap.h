@@ -8,27 +8,27 @@ namespace xenon
 {
     class heap
     {
-        struct node
+        struct space
         {
             size_t size;
             bool free;
             vaddr_t addr;
 
-            node(vaddr_t a, size_t s) :
+            space(vaddr_t a, size_t s) :
                 size(s),
-                free(true),
-                addr(a)
+                free(true)
             {
+                addr = ptr_to<vaddr_t>(ptr_from(a) + sizeof(space));
             }
         };
 
     private:
         vaddr_t start_;
         size_t size_;
-        bst<node*> free_heap_;
+        bst<space*> free_heap_;
 
     private:
-        node *expand(size_t bytes);
+        space *expand(size_t bytes);
 
     public:
         heap();

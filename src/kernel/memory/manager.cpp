@@ -32,7 +32,7 @@ namespace xenon
                                                    mmap->size + sizeof(mmap->size));
         }
 
-        heap_.setup(ptr_to<vaddr_t>(KVIRTUAL_ADDRESS + 8_MB), 16_MB);
+        heap_.setup(ptr_to<vaddr_t>(KVIRTUAL_ADDRESS + 64_MB), 16_MB);
         initialized_ = true;
     }
 
@@ -78,5 +78,15 @@ namespace xenon
     void manager__::kfree(vaddr_t addr)
     {
         heap_.dealloc(addr);
+    }
+
+    paddr_t manager__::create_address_space()
+    {
+        return paging_->create_top_page_directory();
+    }
+
+    void manager__::destroy_address_space(paddr_t addr)
+    {
+        (void)addr;
     }
 }
