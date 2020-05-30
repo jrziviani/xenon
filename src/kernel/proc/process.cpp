@@ -40,12 +40,15 @@ namespace xenon
         auto len = strlen(name);
         strncpy(name_, name, (len >= 64) ? 64 : len);
 
+        // create a new stack for the process if no
+        // address for stack was passed
         if (kstack_addr == 0) {
             char *stack = new char[kstack_size];
             kstack_addr_ = ptr_from(stack) + kstack_len_;
         }
 
-        top_dir_ = manager::instance().create_address_space();
+        // create a new address space for this process
+        top_dir_ = ptr_from(manager::instance().create_address_space());
     }
 
     process::~process()
@@ -53,7 +56,8 @@ namespace xenon
         char *stack = ptr_to<char*>(kstack_addr_ - kstack_len_);
         delete[] stack;
 
-        manager::instance().destroy_address_space(top_dir_);
+        paddr_t top = ptr_to<paddr_t>(top_dir_);
+        manager::instance().destroy_address_space(top);
     }
 
     size_t process::get_kstack_len() const

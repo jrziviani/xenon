@@ -15,7 +15,6 @@ namespace xenon
                                                    uintptr_t program,
                                                    const char *name)
     {
-        cli();
         process *proc = new amd64_process(kstack_addr,
                                           kstack_size,
                                           program,
@@ -23,7 +22,6 @@ namespace xenon
 
         proc->set_state(PROC_STATE::READY);
         ready_queue_.push_back(proc);
-        sti();
 
         return proc->get_pid();
     }

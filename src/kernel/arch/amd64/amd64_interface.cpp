@@ -5,6 +5,7 @@
 #include "proc/amd64_process_controller.h"
 #include "driver/amd64_timer.h"
 #include "bootstrap/segments.h"
+#include "proc/sync.h"
 
 #include <timer.h>
 #include <klib/new.h>
@@ -50,5 +51,12 @@ namespace xenon
         process_controller_->set_running(pid);
 
         return 0;
+    }
+
+    void amd64_interface::cpu_halt()
+    {
+        sti();
+        halt();
+        cli();
     }
 }

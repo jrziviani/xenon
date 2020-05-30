@@ -72,6 +72,8 @@ namespace xenon
         virtual int init_paging()               = 0;
         virtual int init_interrupts()           = 0;
         virtual int init_processes()            = 0;
+
+        virtual void cpu_halt()                 = 0;
     };
 }
 

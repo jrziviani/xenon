@@ -62,7 +62,7 @@ namespace xenon
         uintptr_t   ustack_addr_;
         size_t      ustack_len_;
         char        name_[64];
-        paddr_t     top_dir_;
+        uintptr_t   top_dir_;
         PROC_STATE  state_;
 
     public:

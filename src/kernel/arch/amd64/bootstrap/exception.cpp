@@ -69,15 +69,11 @@ namespace xenon
             return;
         }
 
-        cli();
         interrupt_handlers[irq] = handler;
-        sti();
     }
 
     void unassign_irq(uint8_t irq)
     {
-        cli();
         interrupt_handlers[irq] = nullptr;
-        sti();
     }
 }

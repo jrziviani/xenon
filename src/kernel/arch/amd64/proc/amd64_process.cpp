@@ -16,6 +16,7 @@ namespace xenon
         ctx_.get_regs()->rdi = 0;
         ctx_.get_regs()->rsp = kstack_addr_;
         ctx_.get_regs()->rip = nip;
+        ctx_.get_regs()->cr3 = top_dir_;
     }
 
     context *amd64_process::get_context()
@@ -35,8 +36,6 @@ namespace xenon
 
         context_regs *running = get_context()->get_regs();
         context_regs *new_context = newp->get_context()->get_regs();
-
-        new_context->cr3 = ptr_from(get_current_page());
 
         running->rip = ip;
 

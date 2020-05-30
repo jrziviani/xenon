@@ -64,14 +64,14 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     process_controller *p = arch->get_process_controller();
     p->create_dummy_processes();
 
+    while (true) {
+        arch->cpu_halt();
+    }
+
     /*
     p->set_running_from_queue();
     p->set_running_from_queue();
     p->set_running_from_queue();
     p->set_running_from_queue();
     */
-
-    while (true) {
-        // ...
-    }
 }

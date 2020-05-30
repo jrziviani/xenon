@@ -137,18 +137,26 @@ namespace xenon
 
         T pop_back()
         {
-            node *n = tail_;
-            tail_ = n->previous_;
+            T data = tail_->data_;
 
-            return n->data_;
+            delete tail_;
+            tail_ = tail_->previous_;
+
+            size_--;
+
+            return data;
         }
 
         T pop_front()
         {
-            node *n = head_;
-            head_ = n->next_;
+            T data = head_->data_;
 
-            return n->data_;
+            delete head_;
+            head_ = head_->next_;
+
+            size_--;
+
+            return data;
         }
 
         void remove(T data)
@@ -169,6 +177,12 @@ namespace xenon
             }
 
             delete n;
+            n = nullptr;
+            size_--;
+
+            if (size_ == 0) {
+                head_ = tail_ = nullptr;
+            }
         }
 
         void clear()

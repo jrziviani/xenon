@@ -45,10 +45,10 @@
 .global save_context
 .type save_context,@function
 save_context:
-    pushq   %rbp;
-    movq    %rsp, %rbp;
+    pushq   %rbp
+    movq    %rsp, %rbp
 
-    _m_save_context;
+    _m_save_context
 
     leaveq
     retq
@@ -56,22 +56,12 @@ save_context:
 .global switch_context
 .type switch_context,@function
 switch_context:
-/*
-    pushq   %rbp;
-    movq    %rsp, %rbp;
-*/
-    cli;
-    _m_save_context;
-    _m_restore_context;
+    _m_save_context
+    _m_restore_context
 
-    movq    CONTEXT_CR3(%rsi), %rax;
-    movq    %cr3,              %rbx;
-    cmpq    %rax,              %rbx;
-    je      1f;
-    movq    %rax,              %cr3;
-1:  sti;
-    jmpq    %rcx
-/*
-    leaveq;
-    retq;
-*/
+    movq    CONTEXT_CR3(%rsi), %rax
+    movq    %cr3,              %rbx
+    cmpq    %rax,              %rbx
+    je      1f
+    movq    %rax,              %cr3
+1:  jmpq    %rcx

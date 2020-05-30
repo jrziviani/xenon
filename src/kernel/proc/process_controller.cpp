@@ -8,11 +8,15 @@ namespace xenon
     void program_a()
     {
         logger::instance().log("Running program_a");
+        while (true) { asm volatile ("sti \t\n"
+                                     "hlt \t\n" : :); }
     }
 
     void program_b()
     {
         logger::instance().log("Running program_b");
+        while (true) { asm volatile ("sti \t\n"
+                                     "hlt \t\n" : :); }
     }
 
     process_controller::process_controller()
@@ -98,11 +102,9 @@ namespace xenon
                        ptr_from(&program_a),
                        "[program_a]");
 
-        /*
-        create_process(ptr_from(kstackb),
+        create_process(0,
                        64_KB,
                        ptr_from(&program_b),
                        "[program_b]");
-        */
     }
 }
