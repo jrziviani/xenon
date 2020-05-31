@@ -44,11 +44,12 @@ namespace xenon
         }
 
         auto next_proc = ready_queue_.pop_front();
-        running_->switch_process(next_proc);
+        auto last_run = running_;
         running_->set_state(PROC_STATE::READY);
         ready_queue_.push_back(running_);
         running_ = next_proc;
         running_->set_state(PROC_STATE::RUNNING);
+        last_run->switch_process(running_);
     }
 
     void process_controller::user_init()
