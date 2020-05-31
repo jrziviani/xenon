@@ -30,12 +30,8 @@ namespace xenon
                      uintptr_t nip,
                      const char *name) :
         pid_(next_pid++),
-        parent_(nullptr),
         kstack_addr_(kstack_addr),
-        kstack_len_(kstack_size),
-        ustack_addr_(0x0),
-        ustack_len_(USTACK_SIZE),
-        state_(PROC_STATE::CREATED)
+        kstack_len_(kstack_size)
     {
         auto len = strlen(name);
         strncpy(name_, name, (len >= 64) ? 64 : len);

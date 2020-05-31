@@ -56,14 +56,14 @@ namespace xenon
     {
     protected:
         pid_t       pid_;
-        process     *parent_;
         uintptr_t   kstack_addr_;
         size_t      kstack_len_;
-        uintptr_t   ustack_addr_;
-        size_t      ustack_len_;
         char        name_[64];
         uintptr_t   top_dir_;
-        PROC_STATE  state_;
+        process     *parent_        = nullptr;
+        size_t      ustack_len_     = 0;
+        uintptr_t   ustack_addr_    = 0x0;
+        PROC_STATE  state_          = PROC_STATE::CREATED;
 
     public:
         process(uintptr_t kstack_addr,

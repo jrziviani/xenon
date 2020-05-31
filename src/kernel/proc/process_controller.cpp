@@ -7,16 +7,22 @@ namespace xenon
 {
     void program_a()
     {
-        logger::instance().log("Running program_a");
-        while (true) { asm volatile ("sti \t\n"
-                                     "hlt \t\n" : :); }
+        asm volatile("sti \t\n");
+        while (true) { 
+            logger::instance().log("Running program_a");
+            /*
+            asm volatile ("sti \t\n"
+                          "hlt \t\n" : :);
+            */
+        }
     }
 
     void program_b()
     {
-        logger::instance().log("Running program_b");
-        while (true) { asm volatile ("sti \t\n"
-                                     "hlt \t\n" : :); }
+        asm volatile("sti \t\n");
+        while (true) { 
+            logger::instance().log("Running program_b");
+        }
     }
 
     process_controller::process_controller()
