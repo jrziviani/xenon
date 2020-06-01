@@ -27,6 +27,28 @@ namespace xenon
                     break;
                 }
             }
+            else {
+                const char *type;
+                switch (mmap->type) {
+                    case MULTIBOOT_MEMORY_RESERVED:
+                        type = "reserved";
+                        break;
+
+                    case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+                        type = "reclaimable";
+                        break;
+
+                    case MULTIBOOT_MEMORY_NVS:
+                        type = "nvs";
+                        break;
+
+                    case MULTIBOOT_MEMORY_BADRAM:
+                        type = "bad ram";
+                        break;
+                }
+                logger::instance().log(" > %s: 0x%x, Length: %d",
+                                        type, mmap->addr, mmap->len);
+            }
 
             mmap = ptr_to<multiboot_memory_map_t*>(ptr_from(mmap) +
                                                    mmap->size + sizeof(mmap->size));

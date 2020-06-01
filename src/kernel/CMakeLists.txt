@@ -41,12 +41,15 @@ add_custom_command(TARGET kernel POST_BUILD
 
 add_custom_target(qemu
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                  COMMAND qemu-img create hda.qcow2 -f qcow2 256M
                   COMMAND qemu-system-x86_64
                       -m 1G
                       -machine q35,accel=tcg
                       -cdrom xenon.iso
                       -d cpu_reset
                       -no-shutdown
+                      -device ide-hd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0,bootindex=1
+                      -drive file=hda.qcow2,format=qcow2,if=none,id=drive-sata0-0-0
                       -monitor unix:qemu-monitor-socket,server,nowait
                   DEPENDS kernel)
 

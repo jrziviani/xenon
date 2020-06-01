@@ -62,7 +62,7 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
                                *arch->get_process_controller());
 
     process_controller *p = arch->get_process_controller();
-    p->create_dummy_processes();
+    //p->create_dummy_processes();
 
     while (true) {
         arch->cpu_halt();

@@ -32,7 +32,7 @@ inline bool isdigit(char c)
     return (c >= '0' && c <= '9');
 }
 
-inline void *memset(void* dest, int ch, size_t count)
+inline void *memset(void *dest, int ch, size_t count)
 {
     char *tmp = reinterpret_cast<char*>(dest);
     while (count > 0) {
@@ -40,6 +40,29 @@ inline void *memset(void* dest, int ch, size_t count)
         --count;
     }
 
+    return dest;
+}
+
+inline void *memcpy(void *dest, const void *src, size_t count)
+{
+    char *cdest = static_cast<char*>(dest);
+    const char *csrc = static_cast<const char*>(src);
+
+    while (count > 0) {
+        *cdest++ = *csrc++;
+        --count;
+    }
+
+    return dest;
+}
+
+inline void *memmove(void *dest, const void *src, size_t count)
+{
+    char *tmp = new char[count];
+    memcpy(tmp, src, count);
+    memcpy(dest, tmp, count);
+
+    delete []tmp;
     return dest;
 }
 
