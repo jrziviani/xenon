@@ -4,6 +4,7 @@
 #include <memory/manager.h>
 #include <proc/process_controller.h>
 #include <proc/scheduler.h>
+#include <drivers/bus/pci.h>
 
 #include "arch_factory.h"
 #include "config.h"
@@ -63,6 +64,12 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     process_controller *p = arch->get_process_controller();
     //p->create_dummy_processes();
+
+    logger::instance().log("Initializing PCI");
+    arch->init_pci();
+    pci *pci = arch->get_pci();
+
+    pci->scan_hw();
 
     while (true) {
         arch->cpu_halt();

@@ -16,6 +16,7 @@ namespace xenon
         int init_paging()               final;
         int init_timer()                final;
         int init_processes()            final;
+        int init_pci()                  final;
 
         void cpu_halt()                 final;
     };

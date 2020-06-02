@@ -19,10 +19,11 @@ namespace xenon
 
                 // ignore lower memory for while ...
                 if (mmap->addr != 0x0) {
+                    /*
                     logger::instance().log(" > Physical Address: 0x%x, Length: %d",
                                            mmap->addr,
                                            mmap->len);
-
+                    */
                     physical_.setup(ptr_to<paddr_t>(mmap->addr), mmap->len);
                     break;
                 }
@@ -46,8 +47,10 @@ namespace xenon
                         type = "bad ram";
                         break;
                 }
+                /*
                 logger::instance().log(" > %s: 0x%x, Length: %d",
                                         type, mmap->addr, mmap->len);
+                                        */
             }
 
             mmap = ptr_to<multiboot_memory_map_t*>(ptr_from(mmap) +

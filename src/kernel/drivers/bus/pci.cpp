@@ -1,12 +1,21 @@
 #include "pci.h"
 
 #include <klib/string.h>
+#include <klib/logger.h>
 
 constexpr unsigned PCI_VENDOR_ID     = 0x00;
 constexpr unsigned PCI_DEVICE_ID     = 0x02;
 constexpr unsigned PCI_SUBCLASS      = 0x0a;
 constexpr unsigned PCI_CLASS         = 0x0b;
 constexpr unsigned PCI_HEADER_TYPE   = 0x0e;
+
+constexpr unsigned PCI_BAR_0         = 0x10;
+constexpr unsigned PCI_BAR_1         = 0x14;
+constexpr unsigned PCI_BAR_2         = 0x18;
+constexpr unsigned PCI_BAR_3         = 0x1c;
+constexpr unsigned PCI_BAR_4         = 0x20;
+constexpr unsigned PCI_BAR_5         = 0x24;
+
 constexpr unsigned PCI_SECONDARY_BUS = 0x19;
 constexpr unsigned PCI_TYPE_BRIDGE   = 0x604;
 constexpr unsigned PCI_NONE          = 0xffff;
@@ -17,100 +26,76 @@ namespace xenon
     {
     }
 
-    void pci::remap()
+    void pci::scan_hw()
     {
-        auto find_isa_bridge = [](uint32_t device,
-                                  uint16_t vendor_id,
-                                  uint16_t device_id,
-                                  void *extra) {
-            if (vendor_id == 0x8086 && (device_id == 0x7000 || device_id == 0x7110)) {
-                *static_cast<uint32_t*>(extra) = device;
-            }
+        auto callback = [](const pci_address_t &addr) {
+
         };
 
-        scan(find_isa_bridge, -1, &pci_isa_);
-        if (pci_isa_ == 0) {
+        scan(callback);
+    }
+
+    void pci::scan(pci_function_t cb)
+    {
+        if ((read8_field(pci_address_t(0, 0, 0), PCI_HEADER_TYPE) & 0x80) == 0) {
+            scan_bus(cb, -1, 0);
             return;
         }
 
-        for (int i = 0; i < 4; i++) {
-            pci_remaps_[i] = read_field(pci_isa_, 0x60 + i, i);
-            if (pci_remaps_[i] == 0x80) {
-                pci_remaps_[i] = 10 + (i % 1);
+        for (uint8_t function = 0; function < 8; function++) {
+            if (read16_field(pci_address_t(0, 0, function), PCI_VENDOR_ID) == PCI_NONE) {
+                break;
             }
+            scan_bus(cb, -1, function);
         }
-        uint32_t out = 0;
-        memcpy(&out, &pci_remaps_, 4);
-        write_field(pci_isa_, 0x60, 4, out);
     }
 
-    void pci::scan(pci_function_t fn, int type, void *extra)
+    void pci::scan_bus(pci_function_t cb, int type, uint8_t bus)
     {
-        if ((read_field(0, PCI_HEADER_TYPE, 1) & 0x80) == 0) {
-            scan_bus(fn, type, 0, extra);
+        for (uint8_t slot = 0; slot < 32; slot++) {
+            scan_slot(cb, type, bus, slot);
+        }
+    }
+
+    void pci::scan_slot(pci_function_t cb, int type, uint8_t bus, uint8_t slot)
+    {
+        pci_address_t address(bus, slot, 0);
+        if (read16_field(address, PCI_VENDOR_ID) == PCI_NONE) {
             return;
         }
 
-        for (int func = 0; func < 8; func++) {
-            auto dev = device(0, 0, func);
-            if (read_field(dev, PCI_VENDOR_ID, 2) != PCI_NONE) {
-                scan_bus(fn, type, func, extra);
-            }
-
-            break;
-        }
-    }
-
-    uint16_t pci::find_type(uint32_t dev)
-    {
-        auto ret = (read_field(dev, PCI_CLASS, 1) << 8) | read_field(dev, PCI_SUBCLASS, 1);
-        return ret;
-    }
-
-    void pci::scan_hit(pci_function_t fn, uint32_t dev, void *extra)
-    {
-        auto vendor = static_cast<int>(read_field(dev, PCI_VENDOR_ID, 2));
-        auto dev_id = static_cast<int>(read_field(dev, PCI_DEVICE_ID, 2));
-
-        fn(dev, vendor, dev_id, extra);
-    }
-
-    void pci::scan_func(pci_function_t fn, int type, int bus, int slot, int func, void *extra)
-    {
-        auto dev = device(bus, slot, func);
-        if (type == -1 || type == find_type(dev)) {
-            scan_hit(fn, dev, extra);
-        }
-
-        if (find_type(dev) == PCI_TYPE_BRIDGE) {
-            scan_bus(fn, type, read_field(dev, PCI_SECONDARY_BUS, 1), extra);
-        }
-    }
-
-    void pci::scan_slot(pci_function_t fn, int type, int bus, int slot, void *extra)
-    {
-        auto dev = device(bus, slot, 0);
-        if (read_field(dev, PCI_VENDOR_ID, 2) == PCI_NONE) {
+        scan_function(cb, type, bus, slot, 0);
+        if ((read8_field(address, PCI_HEADER_TYPE) & 0x80) == 0) {
             return;
         }
 
-        scan_func(fn, type, bus, slot, 0, extra);
-        if (!read_field(dev, PCI_HEADER_TYPE, 1)) {
-            return;
-        }
-
-        for (int func = 1; func < 8; func++) {
-            dev = device(bus, slot, func);
-            if (read_field(dev, PCI_VENDOR_ID, 2) != PCI_NONE) {
-                scan_func(fn, type, bus, slot, func, extra);
+        for (uint8_t function = 1; function < 8; function++) {
+            if (read16_field(pci_address_t(bus, slot, function), PCI_VENDOR_ID) != PCI_NONE) {
+                scan_function(cb, type, bus, slot, function);
             }
         }
     }
 
-    void pci::scan_bus(pci_function_t fn, int type, int bus, void *extra)
+    void pci::scan_function(pci_function_t cb, int type, uint8_t bus, uint8_t slot, uint8_t function)
     {
-        for (int slot = 0; slot < 32; slot++) {
-            scan_slot(fn, type, bus, slot, extra);
+        pci_address_t address(bus, slot, function);
+        if (type == -1 || type == get_type(address)) {
+            logger::instance().log(" > PCI %d:%d:%d - 0x%x 0x%x", address.bus,
+                                                                  address.slot,
+                                                                  address.function,
+                                                                  read16_field(address, PCI_VENDOR_ID),
+                                                                  read16_field(address, PCI_DEVICE_ID));
         }
+
+        if (get_type(address) == PCI_TYPE_BRIDGE) {
+            auto secondary_bus = read8_field(address, PCI_SECONDARY_BUS);
+            scan_bus(cb, type, secondary_bus);
+        }
+    }
+
+    uint16_t pci::get_type(pci_address_t address) const
+    {
+        return static_cast<uint16_t>((read8_field(address, PCI_CLASS) << 8u) |
+                                      read8_field(address, PCI_SUBCLASS));
     }
 }

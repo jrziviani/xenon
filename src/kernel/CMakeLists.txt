@@ -4,6 +4,7 @@ add_subdirectory(appendix)
 add_subdirectory(arch)
 add_subdirectory(memory)
 add_subdirectory(proc)
+add_subdirectory(drivers)
 
 set(MAX_PAGE_SIZE 0x1000)
 set(LINKER_SCRIPT "kernel.ld")
@@ -20,6 +21,7 @@ target_link_libraries(kernel LINK_PUBLIC
                       amd64.o
                       proc.o
                       memory.o
+                      driver_bus.o
                       appendix.o)
 
 add_custom_command(TARGET kernel PRE_LINK
@@ -50,7 +52,6 @@ add_custom_target(qemu
                       -no-shutdown
                       -device ide-hd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0,bootindex=1
                       -drive file=hda.qcow2,format=qcow2,if=none,id=drive-sata0-0-0
-                      -monitor unix:qemu-monitor-socket,server,nowait
                   DEPENDS kernel)
 
 add_custom_target(qemu-debug

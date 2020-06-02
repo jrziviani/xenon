@@ -6,12 +6,20 @@
 #include "driver/amd64_timer.h"
 #include "bootstrap/segments.h"
 #include "proc/sync.h"
+#include "driver/amd64_pci.h"
 
 #include <timer.h>
 #include <klib/new.h>
 
 namespace xenon
 {
+    int amd64_interface::init_pci()
+    {
+        pci_ = new amd64_pci();
+
+        return 0;
+    }
+
     int amd64_interface::init_interrupts()
     {
         segments::idt_setup();

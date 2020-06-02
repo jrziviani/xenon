@@ -6,6 +6,7 @@
 #include <proc/process_controller.h>
 #include <memory/paging.h>
 #include <memory/manager.h>
+#include <drivers/bus/pci.h>
 
 #include <klib/new.h>
 
@@ -29,22 +30,24 @@ namespace xenon
     class arch_interface
     {
     protected:
-        timer *timer_;
-        paging *paging_;
-        context *context_;
-        process_controller *process_controller_;
+        pci *pci_         = nullptr;
+        timer *timer_     = nullptr;
+        paging *paging_   = nullptr;
+        context *context_ = nullptr;
+        process_controller *process_controller_ = nullptr;
 
     public:
-        arch_interface() :
-            timer_(nullptr),
-            paging_(nullptr),
-            context_(nullptr),
-            process_controller_(nullptr)
+        arch_interface()
         {
         }
 
         virtual ~arch_interface()
         {
+        }
+
+        pci *get_pci()
+        {
+            return pci_;
         }
 
         paging *get_paging()
@@ -72,6 +75,7 @@ namespace xenon
         virtual int init_paging()               = 0;
         virtual int init_interrupts()           = 0;
         virtual int init_processes()            = 0;
+        virtual int init_pci()                  = 0;
 
         virtual void cpu_halt()                 = 0;
     };
