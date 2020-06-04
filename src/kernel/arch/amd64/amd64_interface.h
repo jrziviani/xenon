@@ -3,9 +3,9 @@
 
 #include "arch_interface.h"
 
-#include <proc/context.h>
-#include <klib/timer.h>
 #include <klib/logger.h>
+#include <proc/context.h>
+#include <drivers/keyboard.h>
 
 namespace xenon
 {
@@ -17,6 +17,9 @@ namespace xenon
         int init_timer()                final;
         int init_processes()            final;
         int init_pci()                  final;
+        void assign_irq(irq_handler*)   final;
+
+        keyboard *create_keyboard()     final;
 
         void cpu_halt()                 final;
     };

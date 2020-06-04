@@ -28,19 +28,9 @@ namespace xenon
         outb(COMMAND_PORT, REPEAT_MODE);
         outb(DATA_PORT_0, lo);
         outb(DATA_PORT_0, hi);
-
-        assign_irq(0, this);
     }
 
     amd64_timer::~amd64_timer()
     {
-        unassign_irq(0);
-    }
-
-    void amd64_timer::on_time(uint64_t freq)
-    {
-        for (auto obj : registered_) {
-            obj->on_time(freq);
-        }
     }
 }

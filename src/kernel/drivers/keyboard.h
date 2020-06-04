@@ -9,8 +9,12 @@ namespace xenon
 
     class keyboard : public char_device
     {
-
         static const char *keycode_to_str(keycode_t key);
+
+    public:
+        virtual void on_keyboard()
+        {
+        }
     };
 };
 

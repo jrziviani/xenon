@@ -1,14 +1,17 @@
 #ifndef ARCH_INTERFACE_H
 #define ARCH_INTERFACE_H
 
-#include "timer.h"
 #include <proc/context.h>
 #include <proc/process_controller.h>
 #include <memory/paging.h>
 #include <memory/manager.h>
+#include <drivers/timer.h>
+#include <drivers/keyboard.h>
+#include <drivers/irq_handler.h>
 #include <drivers/bus/pci.h>
 
 #include <klib/new.h>
+#include <klib/xenon_base.h>
 
 namespace xenon
 {
@@ -76,6 +79,9 @@ namespace xenon
         virtual int init_interrupts()           = 0;
         virtual int init_processes()            = 0;
         virtual int init_pci()                  = 0;
+        virtual void assign_irq(irq_handler*)   = 0;
+
+        virtual keyboard *create_keyboard()     = 0;
 
         virtual void cpu_halt()                 = 0;
     };

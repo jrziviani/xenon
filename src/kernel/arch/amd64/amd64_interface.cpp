@@ -1,14 +1,15 @@
 #include "amd64_interface.h"
 #include "memory/pagetable.h"
 #include "memory/amd64_paging.h"
+#include "proc/sync.h"
 #include "proc/amd64_context.h"
 #include "proc/amd64_process_controller.h"
-#include "driver/amd64_timer.h"
 #include "bootstrap/segments.h"
-#include "proc/sync.h"
+#include "bootstrap/exception.h"
+#include "driver/amd64_timer.h"
 #include "driver/amd64_pci.h"
+#include "driver/amd64_keyboard.h"
 
-#include <timer.h>
 #include <klib/new.h>
 
 namespace xenon
@@ -43,6 +44,11 @@ namespace xenon
         return 0;
     }
 
+    void amd64_interface::assign_irq(irq_handler *hdl)
+    {
+        xenon::assign_irq(0, hdl);
+    }
+
     int amd64_interface::init_processes()
     {
         // https://forum.osdev.org/viewtopic.php?f=1&t=15622
@@ -59,6 +65,11 @@ namespace xenon
         process_controller_->set_running(pid);
 
         return 0;
+    }
+
+    keyboard *amd64_interface::create_keyboard()
+    {
+        new amd64_keyboard();
     }
 
     void amd64_interface::cpu_halt()

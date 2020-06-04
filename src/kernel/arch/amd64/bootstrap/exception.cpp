@@ -2,11 +2,9 @@
 
 #include <arch/amd64/instructions.h>
 
-const uint8_t MAX_INTERRUPT_HANDLERS = 16;
-
 namespace xenon
 {
-    xenon_base *interrupt_handlers[MAX_INTERRUPT_HANDLERS];
+    irq_handler *interrupt_handlers_;
 
     void print_registers(const regs &r)
     {
@@ -47,14 +45,17 @@ namespace xenon
         }
         outb(0x20, 0x20);
 
-        if (interrupt_handlers[r.int_no] == 0) {
-            //logger::instance().log("DEBUG: No handler to IRQ#%d", r.int_no);
+        if (interrupt_handlers_ == nullptr) {
             return;
         }
 
         switch (r.int_no) {
             case 0: // timer
-                interrupt_handlers[0]->on_time(0);
+                interrupt_handlers_->trigger_timer();
+                break;
+
+            case 1: // keyboard
+                interrupt_handlers_->trigger_keyboard();
                 break;
 
             default:
@@ -62,18 +63,18 @@ namespace xenon
         }
     }
 
-    void assign_irq(uint8_t irq, xenon_base *handler)
+    void assign_irq(uint8_t irq, irq_handler *handler)
     {
         if (irq > 15) {
             logger::instance().log("PANIC: Invalid IRQ %d", irq);
             return;
         }
 
-        interrupt_handlers[irq] = handler;
+        interrupt_handlers_ = handler;
     }
 
     void unassign_irq(uint8_t irq)
     {
-        interrupt_handlers[irq] = nullptr;
+        (void)irq;
     }
 }

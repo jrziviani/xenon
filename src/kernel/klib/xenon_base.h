@@ -2,24 +2,26 @@
 #define XENON_BASE_H
 
 #include "klib/stdint.h"
-#include "llist.h"
 
 namespace xenon
 {
     class xenon_base
     {
     public:
-        virtual ~xenon_base() = 0;
+        virtual ~xenon_base() = default;
 
-        virtual void on_time(uint64_t /*freq*/)
+        virtual void on_time()
         {
-            // not implement in this abstract class
         }
-    };
 
-    inline xenon_base::~xenon_base()
-    {
-    }
+        virtual void on_keyboard()
+        {
+        }
+
+    protected:
+        xenon_base() = default;
+        xenon_base(const xenon_base&) = delete;
+    };
 }
 
 #endif // XENON_BASE_H

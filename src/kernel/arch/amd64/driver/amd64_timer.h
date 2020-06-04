@@ -2,7 +2,7 @@
 #define AMD64_TIMER_H
 
 #include <klib/stdint.h>
-#include <klib/timer.h>
+#include <drivers/timer.h>
 
 namespace xenon
 {
@@ -14,8 +14,6 @@ namespace xenon
     public:
         amd64_timer(uint64_t frequency);
         ~amd64_timer();
-
-        void on_time(uint64_t freq) final;
     };
 }
 

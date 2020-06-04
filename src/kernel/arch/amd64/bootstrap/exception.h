@@ -5,6 +5,7 @@
 
 #include <klib/logger.h>
 #include <klib/xenon_base.h>
+#include <drivers/irq_handler.h>
 
 namespace xenon
 {
@@ -13,7 +14,7 @@ namespace xenon
 
     void print_registers(const regs &r);
 
-    void assign_irq(uint8_t irq, xenon_base *handler);
+    void assign_irq(uint8_t irq, irq_handler *handler);
     void unassign_irq(uint8_t irq);
 }
 

@@ -5,7 +5,7 @@
 
 #include <klib/xenon_base.h>
 #include <klib/logger.h>
-#include <klib/timer.h>
+#include <drivers/irq_handler.h>
 
 namespace xenon
 {
@@ -14,10 +14,10 @@ namespace xenon
         process_controller &process_controller_;
 
     public:
-        scheduler(timer *t, process_controller &controller);
+        scheduler(process_controller &controller);
         ~scheduler();
 
-        void on_time(uint64_t freq) final;
+        void on_time() final;
     };
 }
 

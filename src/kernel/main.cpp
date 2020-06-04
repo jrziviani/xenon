@@ -1,9 +1,10 @@
 #include <klib/multiboot.h>
 #include <klib/logger.h>
-#include <klib/timer.h>
 #include <memory/manager.h>
 #include <proc/process_controller.h>
 #include <proc/scheduler.h>
+#include <drivers/keyboard.h>
+#include <drivers/irq_handler.h>
 #include <drivers/bus/pci.h>
 
 #include "arch_factory.h"
@@ -59,8 +60,13 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     arch->init_timer();
 
     logger::instance().log("Initializing scheduler");
-    scheduler simple_scheduler(arch->get_timer(),
-                               *arch->get_process_controller());
+    irq_handler irqs;
+    arch->assign_irq(&irqs);
+
+    scheduler simple_scheduler(*arch->get_process_controller());
+    irqs.register_me<scheduler>(&simple_scheduler);
+
+    irqs.register_me<keyboard>(arch->create_keyboard());
 
     process_controller *p = arch->get_process_controller();
     //p->create_dummy_processes();

@@ -3,13 +3,14 @@
 
 #include "llist.h"
 #include "type_traits.h"
+#include <klib/logger.h>
+#include <klib/xenon_base.h>
 
 namespace xenon
 {
-    template <class C>
     class irq_handler
     {
-        llist<C*> registered_;
+        llist<xenon_base*> registered_;
 
         reflection_has_member(on_time);
         reflection_has_member(on_keyup);
@@ -21,17 +22,23 @@ namespace xenon
             registered_.clear();
         }
 
-        void register_me(C *obj)
+        template <typename T>
+        void register_me(xenon_base *obj)
         {
             registered_.push_back(obj);
         }
 
         void trigger_timer()
         {
-            if constexpr (has_member_on_time<C>::value) {
-                for (auto obj : registered_) {
-                    obj->on_time();
-                }
+            for (auto obj : registered_) {
+                obj->on_time();
+            }
+        }
+
+        void trigger_keyboard()
+        {
+            for (auto obj : registered_) {
+                obj->on_keyboard();
             }
         }
     };
