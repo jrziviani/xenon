@@ -83,6 +83,10 @@ namespace xenon
                             term_.prints(va_arg(args, const char*), ' ', width);
                             break;
 
+                        case 'c':
+                            term_.printc(static_cast<char>(va_arg(args, int)));
+                            break;
+
                         default:
                             term_.printc(c);
                             break;
