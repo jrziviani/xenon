@@ -64,4 +64,4 @@ switch_context:
     cmpq    %rax,              %rbx
     je      1f
     movq    %rax,              %cr3
-1:  jmpq    %rcx
+1:  jmpq    *%rcx
