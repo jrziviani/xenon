@@ -69,7 +69,7 @@ namespace xenon
 
     keyboard *amd64_interface::create_keyboard()
     {
-        new amd64_keyboard();
+        return new amd64_keyboard();
     }
 
     void amd64_interface::cpu_halt()

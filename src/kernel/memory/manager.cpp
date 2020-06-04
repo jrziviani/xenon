@@ -29,6 +29,7 @@ namespace xenon
                 }
             }
             else {
+                /*
                 const char *type;
                 switch (mmap->type) {
                     case MULTIBOOT_MEMORY_RESERVED:
@@ -47,10 +48,9 @@ namespace xenon
                         type = "bad ram";
                         break;
                 }
-                /*
                 logger::instance().log(" > %s: 0x%x, Length: %d",
                                         type, mmap->addr, mmap->len);
-                                        */
+                */
             }
 
             mmap = ptr_to<multiboot_memory_map_t*>(ptr_from(mmap) +

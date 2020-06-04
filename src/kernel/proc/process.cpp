@@ -33,6 +33,7 @@ namespace xenon
         kstack_addr_(kstack_addr),
         kstack_len_(kstack_size)
     {
+        (void)nip;
         auto len = strlen(name);
         strncpy(name_, name, (len >= 64) ? 64 : len);
 

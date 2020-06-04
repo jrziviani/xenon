@@ -68,8 +68,10 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     irqs.register_me<keyboard>(arch->create_keyboard());
 
+    /*
     process_controller *p = arch->get_process_controller();
-    //p->create_dummy_processes();
+    p->create_dummy_processes();
+    */
 
     logger::instance().log("Initializing PCI");
     arch->init_pci();

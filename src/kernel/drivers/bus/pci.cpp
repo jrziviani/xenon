@@ -29,7 +29,7 @@ namespace xenon
     void pci::scan_hw()
     {
         auto callback = [](const pci_address_t &addr) {
-
+            (void)addr;
         };
 
         scan(callback);
