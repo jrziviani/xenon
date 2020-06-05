@@ -64,8 +64,8 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     arch->assign_irq(&irqs);
 
     scheduler simple_scheduler(*arch->get_process_controller());
-    irqs.register_me<scheduler>(&simple_scheduler);
 
+    irqs.register_me<scheduler>(&simple_scheduler);
     irqs.register_me<keyboard>(arch->create_keyboard());
 
     /*

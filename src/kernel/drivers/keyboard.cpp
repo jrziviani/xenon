@@ -1,6 +1,7 @@
 #include "keyboard.h"
 
 #include <klib/stdint.h>
+#include <klib/logger.h>
 
 #define KEY_CODES                                         \
     X(KEY_INVALID,      KEY_INVALID,      0,      0)      \
@@ -107,21 +108,33 @@ static const char en_US_shift[] = {
 #undef X
 };
 
+constexpr char SHIFT  = 0x1;
+constexpr char CTRL   = 0x2;
+constexpr char ALT    = 0x4;
+constexpr char CAPS   = 0x8;
+constexpr char NUM    = 0x10;
+constexpr char SCROLL = 0x20;
+constexpr char ESC    = 0x40;
+
 namespace xenon
 {
     enum class keycode_t
     {
+        /*
     #define X(name, shift_name, code, shift_code) name,
         KEY_CODES
     #undef X
-
+*/
+            /*
     #define X(name, shift_name, code, shift_code) shift_name,
         KEY_CODES
     #undef X
+    */
     };
 
-    static const char *keyboard::keycode_to_str(keycode_t key)
+    static const char *keycode_to_str(const keycode_t *key)
     {
+        /*
         switch (key) {
     #define X(name, shift_name, code, shift_code) \
             case keycode_t::name: return #name;   \
@@ -132,5 +145,17 @@ namespace xenon
             default:
                 return "undefined";
         }
+        */
+        return "";
+    }
+
+    void keyboard::on_keyup(char c)
+    {
+        (void)c;
+    }
+
+    void keyboard::on_keydown(char c)
+    {
+        logger::instance().raw(en_US[c]);
     }
 }

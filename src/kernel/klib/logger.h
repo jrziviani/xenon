@@ -98,6 +98,11 @@ namespace xenon
 
             return 0;
         }
+
+        void raw(char c)
+        {
+            term_.printc(c);
+        }
     };
 
     using logger = singleton<logger__>;

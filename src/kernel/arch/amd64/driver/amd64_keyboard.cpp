@@ -1,7 +1,5 @@
 #include "amd64_keyboard.h"
 
-#include <klib/logger.h>
-
 constexpr uint16_t DATA_IN_BUFFER = 0x01;
 constexpr uint16_t STATUS_PORT = 0x64;
 constexpr uint16_t DATA_PORT = 0x60;
@@ -16,6 +14,14 @@ namespace xenon
         }
 
         auto data = inb(DATA_PORT);
-        logger::instance().log("KEY PRESSED: %c", data);
+
+        // key up
+        if (data & 0x80) {
+            keyboard::on_keyup(data);
+        }
+        // key down
+        else {
+            keyboard::on_keydown(data);
+        }
     }
 }

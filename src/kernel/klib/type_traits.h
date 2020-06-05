@@ -84,7 +84,4 @@ struct is_same<T, T> : true_type {};
     {                                                                                               \
     };
 
-
-
-
 #endif // TYPE_TRAITS_H
