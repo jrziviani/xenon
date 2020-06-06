@@ -9,9 +9,12 @@ namespace xenon
 
     class keyboard : public char_device
     {
+    protected:
+        unsigned int shift_;
+
     public:
-        void on_keyup(char c);
-        void on_keydown(char c);
+        void on_keyup(unsigned char c);
+        void on_keydown(unsigned char c);
 
     public:
         virtual void on_keyboard()

@@ -149,13 +149,30 @@ namespace xenon
         return "";
     }
 
-    void keyboard::on_keyup(char c)
+    void keyboard::on_keyup(unsigned char c)
     {
-        (void)c;
+        switch (c) {
+            case 0xaa: // left shift release
+            case 0xb6: // right shift release
+                shift_ = 0;
+                return;
+        }
     }
 
-    void keyboard::on_keydown(char c)
+    void keyboard::on_keydown(unsigned char c)
     {
-        logger::instance().raw(en_US[c]);
+        switch (c) {
+            case 0x2a: // left shift
+            case 0x36: // right shift
+                shift_ = 1;
+                return;
+        }
+
+        if (shift_) {
+            logger::instance().raw(en_US_shift[c]);
+        }
+        else {
+            logger::instance().raw(en_US[c]);
+        }
     }
 }
