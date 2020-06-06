@@ -7,7 +7,6 @@ namespace xenon
 {
     class char_device : public xenon_base
     {
-
     };
 }
 

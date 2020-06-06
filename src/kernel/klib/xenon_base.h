@@ -18,6 +18,10 @@ namespace xenon
         {
         }
 
+        virtual void on_disk_event()
+        {
+        }
+
     protected:
         xenon_base() = default;
         xenon_base(const xenon_base&) = delete;

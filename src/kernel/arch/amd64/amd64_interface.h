@@ -20,6 +20,7 @@ namespace xenon
         void assign_irq(irq_handler*)   final;
 
         keyboard *create_keyboard()     final;
+        ide *create_ide()               final;
 
         void cpu_halt()                 final;
     };

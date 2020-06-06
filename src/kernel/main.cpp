@@ -6,6 +6,7 @@
 #include <drivers/keyboard.h>
 #include <drivers/irq_handler.h>
 #include <drivers/bus/pci.h>
+#include <drivers/ide.h>
 
 #include "arch_factory.h"
 #include "config.h"
@@ -67,6 +68,7 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     irqs.register_me<scheduler>(&simple_scheduler);
     irqs.register_me<keyboard>(arch->create_keyboard());
+    irqs.register_me<ide>(arch->create_ide());
 
     /*
     process_controller *p = arch->get_process_controller();

@@ -41,6 +41,13 @@ namespace xenon
                 obj->on_keyboard();
             }
         }
+
+        void trigger_ide()
+        {
+            for (auto obj : registered_) {
+                obj->on_disk_event();
+            }
+        }
     };
 }
 

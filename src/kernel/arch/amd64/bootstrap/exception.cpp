@@ -58,7 +58,30 @@ namespace xenon
                 interrupt_handlers_->trigger_keyboard();
                 break;
 
+            case 3: // serial port 1 COM2
+                break;
+
+            case 4: // serial port 0 COM1
+                break;
+
+            case 6: // floppy driver
+                break;
+
+            case 7: // parallel port LPT1
+                break;
+
+            case 12: // PS/2 mouse port
+                break;
+
+            case 14: // Primary IDE
+                interrupt_handlers_->trigger_ide();
+                break;
+
+            case 15: // Secondary IDE
+                break;
+
             default:
+                logger::instance().log("Interrupt %d ignored", r.int_no);
                 break;
         }
     }
