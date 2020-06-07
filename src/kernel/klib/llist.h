@@ -87,6 +87,8 @@ namespace xenon
         Alloc allocator_;
 
     public:
+        using const_iterator = const iterator;
+
         llist() :
             head_(nullptr),
             tail_(nullptr)
@@ -197,12 +199,12 @@ namespace xenon
             size_ = 0;
         }
 
-        iterator begin() const
+        const_iterator begin() const
         {
             return iterator(head_);
         }
 
-        iterator end() const
+        const_iterator end() const
         {
             return iterator(nullptr);
         }
