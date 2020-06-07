@@ -1,0 +1,13 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                           ┃
+┃ dBb       dBb             ┃
+┃  dBb     dBb              ┃
+┃   dBb   dBb     oBBBBBBo  ┃
+┃    dBb dBb     dBb    dBb ┃
+┃     dBBBb      BBb    dBB ┃
+┃    dBb dBb     BBBBBBBBBb ┃
+┃   dBb   dBb    BBb        ┃
+┃  dBb     dBb   dBb    dBb ┃
+┃ dBb       dBb   dBBBBBBb  ┃
+┃                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
