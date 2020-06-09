@@ -4,31 +4,46 @@
 #define KPHYSICAL_ADDRESS    0x400000
 #define KVIRTUAL_ADDRESS     0xffffffff80000000ULL
 
-#define MAX_KERNEL_SIZE       32 * 1024 * 1024
+#ifndef __ASSEMBLER__
+    #include <klib/stdint.h>
 
-#define MAX_CPUS             16
+    constexpr size_t   MAX_KERNEL_SIZE = 32_MB;
 
-#define VGA_VIRTUAL_ADDRESS  (KVIRTUAL_ADDRESS + 0xb8000)
+    constexpr uint64_t KSTACK_ADDR = 0xffffffff80326000;
+    constexpr size_t   KSTACK_SIZE = 64_KB;
+    constexpr size_t   USTACK_SIZE = 256_KB;
 
-#define X86_CR0_PE           (1UL)       /* Protected */
-#define X86_CR0_PG           (1UL << 31) /* Paging */
+    constexpr size_t   FRAME_SIZE = 4_KB;
 
-#define X86_CR4_PAE          (1UL << 5)  /* Physical address extension */
+    constexpr size_t   MAX_CPUS = 16;
 
-#define X86_MSR_EFER         0xc0000080  /* Extended feature register */
-#define X86_MSR_FS_BASE      0xc0000100  /* 64bit FS base */
+    constexpr uint64_t TICKS_PER_SEC = 10'000'000;
+    constexpr uint64_t NANOSECS_PER_TICK = 1'000'000'000ull / TICKS_PER_SEC;
 
-#define X86_MSR_EFER_LME     (1 << 8)    /* Long mode enable */
-#define _EFER_LME            8
+    constexpr uintptr_t VGA_VIRTUAL_ADDRESS = (KVIRTUAL_ADDRESS + 0xb8000);
 
-#define FRAME_SIZE 4096
+    constexpr bool IS_ALIGNED(uintptr_t address)
+    {
+        return ((address & (FRAME_SIZE - 1)) == 0);
+    }
 
-#define KSTACK_ADDR  0xffffffff80326000
-#define KSTACK_SIZE  64 * 1024
-#define USTACK_SIZE  256 * 1024
+    constexpr uintptr_t ALIGN_DOWN(uintptr_t address)
+    {
+        return address & -FRAME_SIZE;
+    }
 
-#define IS_ALIGNED(address) ((address & (FRAME_SIZE - 1)) == 0)
-#define ALIGN_DOWN(address) ((address) & (-FRAME_SIZE))
-#define ALIGN_UP(address)   ALIGN_DOWN(address + FRAME_SIZE - 1)
+    constexpr uintptr_t ALIGN_UP(uintptr_t address)
+    {
+        return ALIGN_DOWN(address + FRAME_SIZE - 1);
+    }
+#else
+    #define X86_CR0_PE           (1UL)       /* Protected */
+    #define X86_CR0_PG           (1UL << 31) /* Paging */
+    #define X86_CR4_PAE          (1UL << 5)  /* Physical address extension */
+    #define X86_MSR_EFER         0xc0000080  /* Extended feature register */
+    #define X86_MSR_FS_BASE      0xc0000100  /* 64bit FS base */
+    #define X86_MSR_EFER_LME     (1 << 8)    /* Long mode enable */
+    #define _EFER_LME            8
+#endif // __ASSEMBLY__
 
 #endif // CONFIG_H

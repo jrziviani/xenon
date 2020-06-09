@@ -1,9 +1,11 @@
 #include "exception.h"
 
+#include <config.h>
 #include <arch/amd64/instructions.h>
 
 namespace xenon
 {
+    uint64_t nanoseconds_since_boot_;
     irq_handler *interrupt_handlers_;
 
     void print_registers(const regs &r)
@@ -44,6 +46,10 @@ namespace xenon
             outb(0xa0, 0x20);
         }
         outb(0x20, 0x20);
+
+        if (r.int_no == 0) {
+            nanoseconds_since_boot_ += NANOSECS_PER_TICK;
+        }
 
         if (interrupt_handlers_ == nullptr) {
             return;
@@ -99,5 +105,16 @@ namespace xenon
     void unassign_irq(uint8_t irq)
     {
         (void)irq;
+    }
+
+    void clock::wait_for(uint64_t miliseconds)
+    {
+        auto ticks = miliseconds + nanoseconds_since_boot_;
+
+        do {
+            sti();
+            halt();
+            cli();
+        } while (ticks > nanoseconds_since_boot_);
     }
 }

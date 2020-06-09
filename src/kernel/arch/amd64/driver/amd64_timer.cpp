@@ -14,8 +14,7 @@ const uint32_t PIT_CLOCK = 1193180;
 namespace xenon
 {
     amd64_timer::amd64_timer(uint64_t frequency) :
-        frequency_(frequency),
-        tick_(0)
+        frequency_(frequency)
     {
         if (frequency == 0) {
             // panic
@@ -32,5 +31,10 @@ namespace xenon
 
     amd64_timer::~amd64_timer()
     {
+    }
+
+    void amd64_timer::wait_for(uint64_t miliseconds)
+    {
+        clock::wait_for(miliseconds);
     }
 }

@@ -16,6 +16,11 @@ namespace xenon
 
     void assign_irq(uint8_t irq, irq_handler *handler);
     void unassign_irq(uint8_t irq);
+
+    namespace clock
+    {
+        void wait_for(uint64_t miliseconds);
+    }
 }
 
 #endif // EXCEPTION_H

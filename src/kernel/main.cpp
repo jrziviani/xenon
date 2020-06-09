@@ -63,6 +63,8 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     logger::instance().log("Initializing timers");
     arch->init_timer();
 
+    arch->get_timer()->wait_for(10000);
+
     logger::instance().log("Initializing scheduler");
     irq_handler irqs;
     arch->assign_irq(&irqs);
