@@ -11,9 +11,6 @@
 #include "arch_factory.h"
 #include "config.h"
 
-// TEST ONLY
-#include <arch/amd64/driver/amd64_ide.h>
-
 using namespace xenon;
 
 void kmain(multiboot_info_t *bootinfo, unsigned long magic)
@@ -63,7 +60,7 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     logger::instance().log("Initializing timers");
     arch->init_timer();
 
-    arch->get_timer()->wait_for(10000);
+    arch->get_timer()->wait_for(1000);
 
     logger::instance().log("Initializing scheduler");
     irq_handler irqs;
@@ -86,6 +83,9 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     devices->scan_hw();
 
+    for (const auto device : *devices) {
+        ide::detect_ide(device);
+    }
 
     while (true) {
         arch->cpu_halt();

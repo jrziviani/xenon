@@ -22,6 +22,9 @@ namespace xenon
         virtual void unmap(paddr_t top_dir, vaddr_t vaddr)                            = 0;
         virtual void unmap(vaddr_t vaddr)                                             = 0;
 
+        virtual int mapio(uintptr_t addr, uint8_t flags)                              = 0;
+        virtual void unmapio(uintptr_t addr)                                          = 0;
+
         virtual paddr_t create_top_page_directory()                                   = 0;
     };
 }

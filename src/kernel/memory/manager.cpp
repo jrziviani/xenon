@@ -95,6 +95,18 @@ namespace xenon
         paging_->unmap(addr);
     }
 
+    int manager__::mapio(uintptr_t dev_addr, size_t size, uint8_t flags)
+    {
+        (void)size;
+
+        return paging_->mapio(dev_addr, flags);
+    }
+
+    void manager__::unmapio(uintptr_t dev_addr)
+    {
+        paging_->unmapio(dev_addr);
+    }
+
     vaddr_t manager__::kalloc(size_t size)
     {
         return heap_.alloc(size);

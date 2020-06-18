@@ -3,9 +3,10 @@
 #include <arch/amd64/instructions.h>
 #include <klib/logger.h>
 #include <drivers/ahci.h>
+#include <memory/manager.h>
+#include <config.h>
 
 // xv6 - bootmain.c
-
 namespace xenon
 {
     void wait_disk()
@@ -27,16 +28,6 @@ namespace xenon
 
         wait_disk();
         //inl(0x1f0, dest, 512 / 4);
-    }
-
-    void detect_ide(pci_info_t info)
-    {
-        // not an ahci sata device, return
-        if (info.klass != 0x1 || info.subclass == 0x6) {
-            return;
-        }
-
-        ahci::hba_mem *abar = reinterpret_cast<ahci::hba_mem*>(info.bars[5] & 0xffffe000);
     }
 
     void amd64_ide::on_disk_event()
