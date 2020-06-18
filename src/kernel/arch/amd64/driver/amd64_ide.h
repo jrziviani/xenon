@@ -11,8 +11,6 @@ namespace xenon
     public:
         void on_disk_event() final;
     };
-
-    void detect_ide(pci_info_t info);
 }
 
 #endif // AMD64_IDE

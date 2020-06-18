@@ -30,6 +30,9 @@ namespace xenon
         void unmap(paddr_t top_dir, vaddr_t vaddr) final;
         void unmap(vaddr_t vaddr)                  final;
 
+        int mapio(uintptr_t addr, uint8_t flags) final;
+        void unmapio(uintptr_t addr)             final;
+
         paddr_t create_top_page_directory() final;
     }; 
 }

@@ -7,6 +7,8 @@
 #ifndef __ASSEMBLER__
     #include <klib/stdint.h>
 
+    constexpr uintptr_t PCI_VIRTUAL_ADDRESS = KVIRTUAL_ADDRESS + 0x40000000;
+
     constexpr size_t   MAX_KERNEL_SIZE = 32_MB;
 
     constexpr uint64_t KSTACK_ADDR = 0xffffffff80326000;

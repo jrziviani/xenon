@@ -166,6 +166,26 @@ namespace xenon
         return map(get_current_page(), vaddr, paddr, flags);
     }
 
+    int amd64_paging::mapio(uintptr_t addr, uint8_t flags)
+    {
+        (void)flags;
+
+        uintptr_t offset = addr & ~0xfeb00000;
+        vaddr_t vaddr = ptr_to<vaddr_t>(PCI_VIRTUAL_ADDRESS + offset);
+        auto pte = PTE(PCI_VIRTUAL_ADDRESS + offset);
+
+        pte_t *page = get_page(get_current_page(), vaddr, true);
+        page->pages[pte] = addr + 0x3;
+
+        return 0;
+    }
+
+    void amd64_paging::unmapio(uintptr_t addr)
+    {
+        addr &= ~0xfeb00000;
+        unmap(ptr_to<vaddr_t>(PCI_VIRTUAL_ADDRESS + addr));
+    }
+
     paddr_t amd64_paging::create_top_page_directory()
     {
         // creates a new map with kernel code already mapped into it
