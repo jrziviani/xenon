@@ -1,15 +1,18 @@
 #ifndef SINGLETON_H
 #define SINGLETON_H
 
+#include "type_traits.h"
+
 namespace xenon
 {
     template <typename T>
     class singleton
     {
     public:
-        static T &instance()
+        template <typename... Args>
+        static T &instance(Args&&... args)
         {
-            static T instance;
+            static T instance(forward<Args>(args)...);
             return instance;
         }
 

@@ -59,7 +59,7 @@ namespace xenon
             void start();
 
         private:
-            void wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time);
+            bool wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time);
         };
 
         struct hba_cmd_header

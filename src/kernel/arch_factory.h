@@ -4,43 +4,93 @@
 #include "arch_interface.h"
 
 #include <klib/new.h>
+#include <klib/logger.h>
+#include <klib/singleton.h>
 #include <arch/amd64/amd64_interface.h>
 
 namespace xenon
 {
+    /*
+     * arch_factory
+     *
+     * This class is a singleton and will be used everywhere specific platform
+     * dependent code is needed.
+     *                                                 [Implementations]
+     *    +--------------------+                            +-------+
+     *    |     singleton      |       [Interface]       +--| amd64 |
+     *    |  +--------------+  |    +----------------+   |  +-------+
+     *    |  | arch_factory |  |    | arch_interface |   |  +-------+
+     *    |  | +call() -----+--+--->| +init_pci()    |<==+--| ppc64 |
+     *    |  |              |  |    | +init_paging() |   |  +-------+
+     *    |  +--------------+  |    | +...           |   |  +-------+
+     *    +--------------------+    +----------------+   +--|  arm  |
+     *                                                      +-------+
+     * - Picking the right platform is a task make by the compiler
+     *   At the end of this source code there's a small piece of code,
+     *   guarded by #ifdefs, that will create an alias to the singleton
+     *   arch_factory considering the actual platform.
+     *
+     * - Calling a platform dependent code is simple:
+     *   arch_factory::instance().call()->init_pci();
+     *
+     *   or, using an alias variable:
+     *   auto arch = arch_factory::instance().call();
+     *   arch->init_pci();
+     *   arch->...();
+     *
+     * - This approach won't polute the code with lots of C macros, they
+     *   will be small and only to solve a particular problem.
+     */
     enum class ARCHITECTURES
     {
         AMD64,
-        ARM,
+        AARCH64,
         PPC64LE,
     };
 
-    /*
-     * set_architecture
-     *
-     * A simple factory to build architecture dependent code in compile time.
-     *
-     * +----------+           +----------------+      +------------------+ |
-     * | main.cpp |           | arch_factory.h |      | <arch>_interface | |
-     * +----+-----+           +--------+-------+      +---------+--------+ |
-     *     | |   set_architecture      |     ARCH_interface     |          |
-     *     | |----------------------->| |----------------------| |         |
-     *     | |                         X                       | |         |
-     *     | |                                                 | |         |
-     *     | |<------------------------------------------------| |         |
-     *     | |                                                 | |         |
-     *     | |------------------------------------------------>| |---...-->|
-     *     | |           arch dependent interaction            | |         |
-     *     ...                                                 ...         |
-     */
-    arch_interface *set_architecture(ARCHITECTURES arch)
+    template <ARCHITECTURES Iface>
+    class arch_factory__
     {
-        if (arch == ARCHITECTURES::AMD64) {
-            return new amd64_interface();
+        friend class singleton<arch_factory__>;
+
+        arch_interface *arch_ = nullptr;
+
+    private:
+        arch_factory__()
+        {
+            if (Iface == ARCHITECTURES::AMD64) {
+                logger::instance().log("Booting amd64");
+                arch_ = new amd64_interface();
+            }
+            else if (Iface == ARCHITECTURES::AARCH64) {
+                logger::instance().log("Booting Aarch64");
+            }
+            else if (Iface == ARCHITECTURES::PPC64LE) {
+                logger::instance().log("Booting PowerPC64");
+            }
         }
 
-        return nullptr;
-    }
+    public:
+        arch_interface *call()
+        {
+            return arch_;
+        }
+
+    public:
+        ~arch_factory__() = default;
+        arch_factory__(const arch_factory__&) = delete;
+        arch_factory__(arch_factory__&&) = delete;
+        arch_factory__ &operator=(const arch_factory__&) = delete;
+        arch_factory__ &&operator=(arch_factory__&&) = delete;
+    };
+
+#ifdef __x86_64__
+    using arch_factory = singleton<arch_factory__<ARCHITECTURES::AMD64>>;
+#elif __aarch64__
+    using arch_factory = singleton<arch_factory__<ARCHITECTURES::AARCH64>>;
+#elif __ppc64__
+    using arch_factory = singleton<arch_factory__<ARCHITECTURES::PPC64LE>>;
+#endif
 }
 
 #endif // ARCH_FACTORY_H

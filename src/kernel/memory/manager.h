@@ -27,14 +27,12 @@ namespace xenon
 
         physical physical_;
         virt     virtual_;
-        paging  *paging_;
+        paging  *paging_ = nullptr;
         heap     heap_;
-        bool     initialized_;
+        bool     initialized_ = false;
 
     private:
-        manager__() :
-            paging_(nullptr),
-            initialized_(false)
+        manager__()
         {
         }
 

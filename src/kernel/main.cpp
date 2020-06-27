@@ -15,24 +15,9 @@ using namespace xenon;
 
 void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 {
+    auto arch = arch_factory::instance().call();
+
     logger::instance().log("Booting XenonOS\n");
-
-#ifdef __x86_64__
-
-    auto arch = set_architecture(ARCHITECTURES::AMD64);
-    if (arch == nullptr) {
-        logger::instance().log("PANIC: error setting AMD64 architecture");
-        return;
-    }
-
-    logger::instance().log("Booting AMD64");
-
-#else // not __x86_64__
-
-    logger::instance().log("PANIC: architecture not supported");
-    return;
-
-#endif // __x86_64__
 
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
         logger::instance().log("Invalid magic number 0x%x", magic);
@@ -65,7 +50,6 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     logger::instance().log("Initializing scheduler");
     irq_handler irqs;
     arch->assign_irq(&irqs);
-
     //scheduler simple_scheduler(*arch->get_process_controller());
 
     //irqs.register_me<scheduler>(&simple_scheduler);

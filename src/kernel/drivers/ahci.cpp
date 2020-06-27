@@ -4,6 +4,8 @@
 #include <klib/string.h>
 #include <memory/allocators.h>
 
+#include <arch_factory.h>
+
 namespace xenon
 {
     enum class IPM : uint8_t
@@ -166,6 +168,22 @@ namespace xenon
     void ahci::ahci_controller::start()
     {
 
+    }
+
+    bool ahci::ahci_controller::wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time)
+    {
+        auto expect = (cond) ? port : 0;
+
+        arch_factory::instance().call()->get_timer()->wait_for(time);
+
+        // after sleeping for _time_ miliseconds, check if the bit has the value
+        // expected. If so, return true.
+        if ((reg & port) == expect) {
+            return true;
+        }
+
+        // return false to inform that condition was not satisfied.
+        return false;
     }
 
     // Initialization

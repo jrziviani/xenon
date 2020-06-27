@@ -19,6 +19,18 @@ struct remove_reference<T&&>
     typedef T type;
 };
 
+template <typename T>
+constexpr T &&forward(remove_reference<T>& t) noexcept
+{
+    return static_cast<T&&>(t);
+}
+
+template <typename T>
+constexpr T &&forward(remove_reference<T>&& t) noexcept
+{
+    return static_cast<T&&>(t);
+}
+
 template<bool B, class T = void>
 struct enable_if {};
 
