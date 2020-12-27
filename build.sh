@@ -2,6 +2,9 @@
 
 set -e
 
+readonly BINUTILS_VERSION='2.35'
+readonly GCC_VERSION='10.2.0'
+
 die() {
     printf "$1\n" >&2
     exit $2
@@ -43,17 +46,17 @@ config_cross_compiler() {
         pushd tmp
             if [[ ! -f .binutils ]]
             then
-                if [[ ! -f binutils-2.34.tar.xz ]]
+                if [[ ! -f binutils-$BINUTILS_VERSION.tar.xz ]]
                 then
                     print_message "Downloading binutils"
-                    curl -O https://ftp.gnu.org/gnu/binutils/binutils-2.34.tar.xz
+                    curl -O https://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz
                 fi
 
                 print_message "Building binutils"
-                tar xf binutils-2.34.tar.xz
+                tar xf binutils-$BINUTILS_VERSION.tar.xz
                 mkdir -p build-binutils
                 pushd build-binutils
-                    ../binutils-2.34/configure \
+                    ../binutils-$BINUTILS_VERSION/configure \
                         --target=x86_64-elf \
                         --prefix="$cpath" \
                         --with-sysroot \
@@ -64,21 +67,21 @@ config_cross_compiler() {
                     make install
                 popd # build-binutils
                 touch .binutils
-                rm binutils-2.34.tar.xz
+                rm binutils-$BINUTILS_VERSION.tar.xz
             fi
 
             if [[ ! -f .gcc ]]
             then
-                if [[ ! -f gcc-9.3.0.tar.xz ]]
+                if [[ ! -f gcc-$GCC_VERSION.tar.xz ]]
                 then
                     print_message "Downloading gcc"
-                    curl -O https://ftp.gnu.org/gnu/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz
+                    curl -O https://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz
                 fi
 
                 print_message "Building gcc"
-                tar xf gcc-9.3.0.tar.xz
-                # cp "$contrib/t-x86_64-elf" gcc-9.3.0/gcc/config/i386/
-                # cp "$contrib/config.gcc" gcc-9.3.0/gcc/
+                tar xf gcc-$GCC_VERSION.tar.xz
+                # cp "$contrib/t-x86_64-elf" gcc-$GCC_VERSION/gcc/config/i386/
+                # cp "$contrib/config.gcc" gcc-GCC_VERSION/gcc/
 
                 export "LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH"
 
@@ -86,7 +89,7 @@ config_cross_compiler() {
                 pushd build-gcc
                     export PATH="$PATH:$cpath/bin"
                     export TARGET=x86_64-elf
-                    ../gcc-9.3.0/configure \
+                    ../gcc-$GCC_VERSION/configure \
                         --target=x86_64-elf \
                         --prefix="$cpath" \
                         --disable-nls \
@@ -99,7 +102,7 @@ config_cross_compiler() {
                     make install-target-libgcc
                 popd # build-gcc
                 touch .gcc
-                rm gcc-9.3.0.tar.xz
+                rm gcc-$GCC_VERSION.tar.xz
             fi
         popd # tmp
 
