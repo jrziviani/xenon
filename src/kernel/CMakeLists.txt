@@ -21,8 +21,7 @@ target_link_libraries(kernel LINK_PUBLIC
                       amd64.o
                       proc.o
                       memory.o
-                      driver_bus.o
-                      driver.o
+                      drivers.o
                       appendix.o)
 
 add_custom_command(TARGET kernel PRE_LINK

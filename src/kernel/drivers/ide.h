@@ -5,7 +5,7 @@
 
 #include <config.h>
 #include <drivers/bus/pci.h>
-#include <drivers/ahci.h>
+#include <drivers/controller/ahci.h>
 #include <memory/manager.h>
 
 namespace xenon

@@ -17,6 +17,10 @@ namespace xenon
         uintptr_t abar_tmp = PCI_VIRTUAL_ADDRESS + (info.bars[5] & ~0xfeb00000);
         auto abar = reinterpret_cast<ahci::hba_memory*>(abar_tmp);
         ahci::probe(abar);
+
+        auto controller = new ahci::ahci_controller(abar);
+        controller->sata_identify();
+
     }
 
     int find_cmdslot(ahci::hba_port *port)

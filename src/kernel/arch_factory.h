@@ -58,20 +58,20 @@ namespace xenon
     private:
         arch_factory__()
         {
-            if (Iface == ARCHITECTURES::AMD64) {
+            if constexpr (Iface == ARCHITECTURES::AMD64) {
                 logger::instance().log("Booting amd64");
                 arch_ = new amd64_interface();
             }
-            else if (Iface == ARCHITECTURES::AARCH64) {
+            else if constexpr (Iface == ARCHITECTURES::AARCH64) {
                 logger::instance().log("Booting Aarch64");
             }
-            else if (Iface == ARCHITECTURES::PPC64LE) {
+            else if constexpr (Iface == ARCHITECTURES::PPC64LE) {
                 logger::instance().log("Booting PowerPC64");
             }
         }
 
     public:
-        arch_interface *call()
+        arch_interface *operator->()
         {
             return arch_;
         }

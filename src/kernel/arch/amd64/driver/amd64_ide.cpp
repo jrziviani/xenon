@@ -2,7 +2,7 @@
 
 #include <arch/amd64/instructions.h>
 #include <klib/logger.h>
-#include <drivers/ahci.h>
+#include <drivers/controller/ahci.h>
 #include <memory/manager.h>
 #include <config.h>
 

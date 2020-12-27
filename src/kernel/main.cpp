@@ -15,7 +15,7 @@ using namespace xenon;
 
 void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 {
-    auto arch = arch_factory::instance().call();
+    auto &arch = arch_factory::instance();
 
     logger::instance().log("Booting XenonOS\n");
 
@@ -44,8 +44,6 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     logger::instance().log("Initializing timers");
     arch->init_timer();
-
-    arch->get_timer()->wait_for(1000);
 
     logger::instance().log("Initializing scheduler");
     irq_handler irqs;

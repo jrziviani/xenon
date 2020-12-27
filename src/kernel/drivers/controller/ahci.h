@@ -50,16 +50,35 @@ namespace xenon
         class ahci_controller
         {
             hba_memory *abar_;
+            uint32_t total_cmd_slots_;
 
         public:
             ahci_controller(hba_memory *abar);
 
             void initialize();
-            void reset();
-            void start();
+            void reset(hba_port *port);
+            void start(hba_port *port);
+            void stop(hba_port *port);
+            void sata_read(hba_port *port, uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer)
+            {
+                // 0x25 - Read DMA Ext
+                sata_execute(port, 0x25, start_lo, start_hi, count, buffer);
+            }
+
+            void sata_write(hba_port *port, uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer)
+            {
+                // 0x35 - Write DMA Ext
+                sata_execute(port, 0x35, start_lo, start_hi, count, buffer);
+            }
+
+            void sata_identify();
 
         private:
             bool wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time);
+
+            void sata_execute(hba_port *port, uint16_t command,
+                              uint64_t start_lo, uint64_t start_hi,
+                              uint64_t count, uintptr_t buffer);
         };
 
         struct hba_cmd_header
@@ -116,24 +135,6 @@ namespace xenon
             // 0x80
             hba_prdt_entry prdt_entry[1]; // Physical region descriptor table entries, 0 ~ 65535
         };
-    }
-}
-
-#endif // AHCI
-
-/*
-        // frame information structures
-        enum class FIS_TYPES
-        {
-            FIS_TYPE_REG_H2D    = 0x27, // Register FIS - host to device
-            FIS_TYPE_REG_D2H    = 0x34, // Register FIS - device to host
-            FIS_TYPE_DMA_ACT    = 0x39, // DMA activate FIS - device to host
-            FIS_TYPE_DMA_SETUP  = 0x41, // DMA setup FIS - bidirectional
-            FIS_TYPE_DATA       = 0x46, // Data FIS - bidirectional
-            FIS_TYPE_BIST       = 0x58, // BIST activate FIS - bidirectional
-            FIS_TYPE_PIO_SETUP  = 0x5F, // PIO setup FIS - device to host
-            FIS_TYPE_DEV_BITS   = 0xA1, // Set device bits FIS - device to host
-        };
 
         struct host_to_device
         {
@@ -166,6 +167,25 @@ namespace xenon
             // DWORD 4
             uint8_t  rsv1[4];   // Reserved
         };
+
+        // frame information structures
+        enum class FIS_TYPES
+        {
+            FIS_TYPE_REG_H2D    = 0x27, // Register FIS - host to device
+            FIS_TYPE_REG_D2H    = 0x34, // Register FIS - device to host
+            FIS_TYPE_DMA_ACT    = 0x39, // DMA activate FIS - device to host
+            FIS_TYPE_DMA_SETUP  = 0x41, // DMA setup FIS - bidirectional
+            FIS_TYPE_DATA       = 0x46, // Data FIS - bidirectional
+            FIS_TYPE_BIST       = 0x58, // BIST activate FIS - bidirectional
+            FIS_TYPE_PIO_SETUP  = 0x5F, // PIO setup FIS - device to host
+            FIS_TYPE_DEV_BITS   = 0xA1, // Set device bits FIS - device to host
+        };
+    }
+}
+
+#endif // AHCI
+
+/*
 
         struct device_to_host
         {

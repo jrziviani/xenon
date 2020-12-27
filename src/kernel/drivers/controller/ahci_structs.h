@@ -263,6 +263,62 @@ namespace xenon
             //      - value 3: indicates 4 bytes, etc...
             uint32_t description_information;
         };
+
+        struct fis // frame information structure
+        {
+            // - when DMA setup FIS arrives from the device, HBA copies it to dma_fis
+            //   28bits used
+            uint32_t dma_fis;
+            // - when PIO setup FIS arrives from the device, HBA copies it to pio_fis
+            //   20bits used
+            uint32_t pio_fis;
+            // - when a D2H register FIS arrives from the device, HBA copies it to d2h_fis
+            //   20bits used 
+            uint32_t d2h_fis:20;
+            uint32_t unused:4;
+            // - when a Set Device Bits FIS arrives form the device, HBA copies it to sdb_fis
+            //   8bits used
+            uint32_t sdb_fis:8;
+            // - when an unknown FIS arrives, HBA copies it to unknown_fis and sets
+            //   hba_port.sata_error[diag.f]. See page 38 - spec 1.3.1.
+            //   up to 64bytes
+            uint32_t unknown_fis[16];
+            uint32_t reserved[24];
+        };
+
+        // SATA ident - return struct - page 50
+        // https://www.seagate.com/files/www-content/support-content/samsung/internal-products/spinpoint-d-series/en-us/docs/PMD8X%20SATA%20100778771e.pdf
+        struct SATA_ident
+        {
+            uint16_t config;
+            uint16_t cylinders;
+            uint16_t unused1;
+            uint16_t heads;
+            uint16_t unused2[2];
+            uint16_t sectors;
+            uint16_t unused3[3];
+            char     serial[20];
+            uint16_t unused4[3];
+            char     firmware[8];
+            char     model[40];
+            uint16_t unused5[2];
+            uint16_t capabilities;
+            uint16_t unused6[26];
+            uint16_t sata_capability;
+            uint16_t sata_future;
+            uint16_t sata_feature_supported;
+            uint16_t sata_feature_enabled;
+            uint16_t major_version;
+            uint16_t minor_version;
+            uint16_t unused7[11];
+            uint16_t comreset;
+            uint16_t unused8[12];
+            uint16_t physical_per_logical_sector_size;
+            uint16_t unused9[102];
+            uint16_t block_align;
+            uint16_t unused10[45];
+            uint16_t integrity;
+        };
     }
 }
 

@@ -239,7 +239,7 @@ helpme() {
     printf "run %s [options]\n" "$0"
     printf "Options:\n"
     printf "\t--build   (-b):\tBuild release target (+binutils and +gcc if first time)\n"
-    printf "\t--clean   (-c):\tClean old objects (binutils and gcc won't be remove)\n"
+    printf "\t--clean   (-c):\tClean old objects (binutils and gcc won't be removed)\n"
     printf "\t--force   (-f):\tUse with --clean to completly remove a target \n"
     printf "\t--debug   (-d):\tBuild debug target\n"
     printf "\t--qemu    (-q):\tRun OS in QEMU emulator\n"
