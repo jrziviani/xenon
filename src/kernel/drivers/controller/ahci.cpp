@@ -89,34 +89,6 @@ namespace xenon
         logger::instance().log("Disk name: %s", nstr);
     }
 
-    void ahci::probe(hba_memory *abar)
-    {
-        auto ports = abar->ports_implemented;
-        for (int i = 0; i < 32; i++, ports >>= 1) {
-            // port not implemented: skip it
-            if ((ports & 1) == 0) {
-                continue;
-            }
-
-            switch (check_type(&abar->ports[i])) {
-                case SIG::SATA:
-                    break;
-
-                case SIG::SATAPI:
-                    break;
-
-                case SIG::PORT_MULTIPLIER:
-                    break;
-
-                case SIG::ENCLOSURE:
-                    break;
-
-                default:    // no drive
-                    break;
-            }
-        }
-    }
-
     ahci::ahci_controller::ahci_controller(hba_memory *abar) :
         abar_(abar)
     {
@@ -194,11 +166,11 @@ namespace xenon
             abar_->ports[i].comm_list_base_addr_lo = ptr_from(physical_command_list) & 0xffff'ffff;
             abar_->ports[i].comm_list_base_addr_hi = ptr_from(physical_command_list) >> 32;
 
-            hba_cmd_header *header = reinterpret_cast<hba_cmd_header*>(place);
+            auto cmd_list = reinterpret_cast<command_list_entry*>(place);
             place = placement_kalloc(sizeof(hba_cmd_tbl) + sizeof(hba_prdt_entry) * PRD_TABLE_ENTRY_COUNT,
                                      &physical_command_table, true);
-            header->ctba = ptr_from(physical_command_table) & 0xffff'ffff;
-            header->ctbau = ptr_from(physical_command_table) >> 32;
+            cmd_list->command_table_base_addr_lo = ptr_from(physical_command_table) & 0xffff'ffff;
+            cmd_list->command_table_base_addr_hi = ptr_from(physical_command_table) >> 32;
 
             //    b. hba_port.fis_base_addr_[lo|hi]
             //    b.1. zero out the memory allocated
@@ -313,14 +285,14 @@ namespace xenon
 
         uintptr_t addr = static_cast<uintptr_t>(port->comm_list_base_addr_hi) << 32 | port->comm_list_base_addr_lo;
         addr += KVIRTUAL_ADDRESS;
-        hba_cmd_header *header = reinterpret_cast<hba_cmd_header*>(addr);
-        header += slot;
-        header->cfl = sizeof(host_to_device) / sizeof(int32_t);
-        header->w = 0;
-        header->p = 1;
-        header->prdtl = 1;
+        auto cmd_list = reinterpret_cast<command_list_entry*>(addr);
+        cmd_list += slot;
+        cmd_list->command_fis_length = sizeof(host_to_device) / sizeof(int32_t);
+        cmd_list->write = 0;
+        cmd_list->prefetchable = 1;
+        cmd_list->prdt_length = 1;
 
-        addr = static_cast<uintptr_t>(header->ctbau) << 32 | header->ctba;
+        addr = static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 | cmd_list->command_table_base_addr_lo;
         addr += KVIRTUAL_ADDRESS;
         hba_cmd_tbl *table = reinterpret_cast<hba_cmd_tbl*>(addr);
 
@@ -368,24 +340,24 @@ namespace xenon
         }
 
         // 3. Build command header at PxCLB[CH(pFreeSlot)]:
-        uintptr_t addr = port->comm_list_base_addr_hi;
-        addr <<= 32 | port->comm_list_base_addr_lo;
-        hba_cmd_header *header = reinterpret_cast<hba_cmd_header*>(addr);
-        header += slot;
+        uintptr_t addr = static_cast<uintptr_t>(port->comm_list_base_addr_hi) << 32 | port->comm_list_base_addr_lo;
+        addr += KVIRTUAL_ADDRESS;
+        auto cmd_list = reinterpret_cast<command_list_entry*>(addr);
+        cmd_list += slot;
         //    CFL set to the length of the command in CFIS area
-        header->cfl = sizeof(host_to_device) / sizeof(int32_t);
+        cmd_list->command_fis_length = sizeof(host_to_device) / sizeof(int32_t);
         //    W(rite) bit set if data is going to the device
-        header->w = (command == 0x35) ? 1 : 0;
+        cmd_list->write = (command == 0x35) ? 1 : 0;
         //    P(refetch) optional
-        header->p = 1;
+        cmd_list->prefetchable = 1;
         //    PRDTL containing the number of entries in PRD table
-        header->prdtl = ((count - 1) >> 4) + 1;
+        cmd_list->prdt_length = ((count - 1) >> 4) + 1;
 
-        addr = header->ctbau;
-        addr <<= 32 | header->ctba;
+        addr = static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 | cmd_list->command_table_base_addr_lo;
+        addr += KVIRTUAL_ADDRESS;
         hba_cmd_tbl *table = reinterpret_cast<hba_cmd_tbl*>(addr);
         uint16_t i = 0;
-        for (; i < header->prdtl - 1; i++ ) {
+        for (; i < cmd_list->prdt_length - 1; i++ ) {
             table->prdt_entry[i].dba = buffer & 0xffffffff;
             table->prdt_entry[i].dbau = buffer << 32;
             table->prdt_entry[i].dbc = 8_KB - 1;

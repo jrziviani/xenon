@@ -17,8 +17,6 @@ namespace xenon
         {
         }
 
-        void read(ahci::hba_port *port);
-
         static void detect_ide(pci_info_t info);
     };
 }

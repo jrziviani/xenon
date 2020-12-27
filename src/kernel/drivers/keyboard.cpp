@@ -132,9 +132,9 @@ namespace xenon
     */
     };
 
+        /*
     static const char *keycode_to_str(const keycode_t *key)
     {
-        /*
         switch (key) {
     #define X(name, shift_name, code, shift_code) \
             case keycode_t::name: return #name;   \
@@ -145,9 +145,9 @@ namespace xenon
             default:
                 return "undefined";
         }
-        */
         return "";
     }
+        */
 
     void keyboard::on_keyup(unsigned char c)
     {
