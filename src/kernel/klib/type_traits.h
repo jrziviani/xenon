@@ -1,6 +1,8 @@
 #ifndef TYPE_TRAITS_H
 #define TYPE_TRAITS_H
 
+#include "stdint.h"
+
 template <typename T>
 struct remove_reference
 {
@@ -18,6 +20,28 @@ struct remove_reference<T&&>
 {
     typedef T type;
 };
+
+template <typename T>
+struct remove_extent
+{
+    typedef T type;
+};
+
+template <typename T>
+struct remove_extent<T[]>
+{
+    typedef T type;
+};
+
+template <typename T, size_t N>
+struct remove_extent<T[N]>
+{
+    typedef T type;
+};
+
+template <typename T>
+using remove_extent_t = typename remove_extent<T>::type;
+
 
 template <typename T>
 constexpr T &&forward(remove_reference<T>& t) noexcept
