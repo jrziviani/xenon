@@ -2,6 +2,8 @@
 #define STRING_H
 
 #include <klib/stdint.h>
+#include "move.h"
+#include "cmemory.h"
 
 inline size_t strlen(const char *s)
 {
@@ -65,5 +67,53 @@ inline void *memmove(void *dest, const void *src, size_t count)
     delete []tmp;
     return dest;
 }
+
+class string
+{
+    size_t capacity_;
+    size_t size_;
+    unique_ptr<char[]> data_;
+
+public:
+    string(const char *str);
+    string(size_t capacity);
+    string(const string &that);
+    string(string &&that);
+    ~string();
+
+    size_t size() const
+    {
+        return size_;
+    }
+
+    size_t capacity() const
+    {
+        return capacity_;
+    }
+
+    char at(size_t index) const
+    {
+        if (index < size_) {
+            return data_[index];
+        }
+
+        return '\0';
+    }
+
+    const char *c_str() const
+    {
+        return data_.get();
+    }
+
+    string &operator=(const string &that) = delete;
+
+    string &operator=(string &&that)
+    {
+        data_ = move(that.data_);
+        capacity_ = that.capacity_;
+        size_ = that.size_;
+        return *this;
+    }
+};
 
 #endif // STRING_H
