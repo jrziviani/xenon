@@ -12,6 +12,7 @@ set(LFLAGS "-fno-PIC -fno-pie -fno-exceptions -fno-rtti -mno-red-zone -mcmodel=k
 
 add_executable(kernel
                klib/new.cpp
+               klib/string.cpp
                main.cpp)
 
 set_target_properties(kernel PROPERTIES

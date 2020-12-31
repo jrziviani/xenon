@@ -199,22 +199,45 @@ namespace xenon
             hba_port ports[1];
         };
 
-        struct command_list_entry
+        struct hba_to_device
         {
-            union {
-                struct {
-                    uint16_t command_fis_length : 5;
-                    uint16_t atapi              : 1;
-                    uint16_t write              : 1;
-                    uint16_t prefetchable       : 1;
-                    uint16_t reset              : 1;
-                    uint16_t bist               : 1;
-                    uint16_t clear_busy_ROK     : 1;
-                    uint16_t reserved_0         : 1;
-                    uint16_t port_multiplier    : 4;
-                    uint16_t prdt_length;
-                };
-                uint32_t description_information;
+            uint8_t  fis_type;  // FIS_TYPE_REG_H2D
+            struct {
+                uint8_t  port_multiplier    : 4;
+                uint8_t  reserved_0         : 3;
+                // 1: command, 0: control
+                uint8_t  cmd_control        : 1;  // 1: Command, 0: Control
+            };
+            uint8_t  command;
+            uint8_t  features_lo;
+            uint8_t  lba_sector;           // LBA sector# register, 7:0
+            uint8_t  lba_cylinder_lo;      // LBA cylinder register, 15:8
+            uint8_t  lba_cylinder_hi;      // LBA cylinder register, 23:16
+            uint8_t  device;
+            uint8_t  lba_sector_exp;       // LBA sector# exp register, 31:24
+            uint8_t  lba_cylinder_lo_exp;  // LBA cylinder exp register, 39:32
+            uint8_t  lba_cylinder_hi_exp;  // LBA cylinder exp register, 47:40
+            uint8_t  features_hi;
+            uint8_t  count_lo;
+            uint8_t  count_hi;
+            uint8_t  icc;
+            uint8_t  control;
+            uint32_t  reserved_1; 
+        };
+
+        struct command_list
+        {
+            struct {
+                uint16_t command_fis_length : 5;
+                uint16_t atapi              : 1;
+                uint16_t write              : 1;
+                uint16_t prefetchable       : 1;
+                uint16_t reset              : 1;
+                uint16_t bist               : 1;
+                uint16_t clear_busy_ROK     : 1;
+                uint16_t reserved_0         : 1;
+                uint16_t port_multiplier    : 4;
+                uint16_t prdt_length;
             };
             // - bit 31:0 [Physical Region Descriptor Byte Count]: indicates the current
             //   byte count that has transferred on device writes (mem to device) or dev
@@ -229,20 +252,7 @@ namespace xenon
             uint32_t reserved_1[4];
         };
 
-        struct command_table
-        {
-            // - Command FIS: SW constructed FIS. For data transfer ops, this is the H2D
-            //   register FIS format as specified in SATA rev. 2.6. HBA sets
-            //   hba_port.task_file_data.Busy and sends this struct to attached port.
-            //   Valid CFIS lengths are 2 to 16 dwords and must be dwords granularity.
-            uint32_t command_cfis[16];
-            // - Atapi Command: 12 or 16 bytes length (16 here) that contains ATAPI command
-            //   to transmit if the A bit set in the command header.
-            uint32_t atapi_command[4];
-            uint32_t reserved[4];
-        };
-
-        struct physical_reg_desc_table
+        struct descriptor_table
         {
             // - bit 31:1 [Data Base Address]: indicates 32-bit physical address of the
             //   data block, which is word aligned, bit 0 must be clear.
@@ -261,7 +271,26 @@ namespace xenon
             //      - bit 0: must always be 1
             //      - value 1: indicates 2 bytes
             //      - value 3: indicates 4 bytes, etc...
-            uint32_t description_information;
+            struct {
+                uint32_t interrupt_on_completition : 1;
+                uint32_t reserved_1                : 9;
+                uint32_t data_byte_count           : 22;
+            };
+        };
+
+        struct command_table
+        {
+            // - Command FIS: SW constructed FIS. For data transfer ops, this is the H2D
+            //   register FIS format as specified in SATA rev. 2.6. HBA sets
+            //   hba_port.task_file_data.Busy and sends this struct to attached port.
+            //   Valid CFIS lengths are 2 to 16 dwords and must be dwords granularity.
+            uint32_t command_cfis[16];
+            // - Atapi Command: 12 or 16 bytes length (16 here) that contains ATAPI command
+            //   to transmit if the A bit set in the command header.
+            uint32_t atapi_command[4];
+            uint8_t  reserved[48];
+
+            descriptor_table descriptor_entry[1];
         };
 
         struct fis // frame information structure

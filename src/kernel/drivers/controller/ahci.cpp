@@ -3,6 +3,8 @@
 #include <klib/stdint.h>
 #include <klib/string.h>
 #include <klib/logger.h>
+#include <klib/cmemory.h>
+#include <klib/utility.h>
 #include <memory/allocators.h>
 
 #include <arch_factory.h>
@@ -70,29 +72,24 @@ namespace xenon
         return -1;
     }
 
-    void print_br(const char *str, int len)
+    void convert_ahci_string(char *str, int len)
     {
-        char nstr[40];
-        for (int i = 0; i < len; i += 2) {
-            if (str[i] == 0) {
+        int i;
+        for (i = 0; i < len; i += 2) {
+            if (str[i] == '\0' || str[i + 1] == '\0') {
                 break;
             }
-            else if (str[i + 1] == 0) {
-                nstr[i] = str[i];
-            }
-            else {
-                nstr[i] = str[i + 1];
-                nstr[i + 1] = str[i];
-            }
-        }
 
-        logger::instance().log("Disk name: %s", nstr);
+            swap(str[i], str[i + 1]);
+        }
+        str[i - 1] = '\0';
     }
 
     ahci::ahci_controller::ahci_controller(hba_memory *abar) :
         abar_(abar)
     {
         initialize();
+        sata_identify();
     }
 
     void ahci::ahci_controller::initialize()
@@ -156,18 +153,18 @@ namespace xenon
             //    a.1. zero out the memory allocated
             paddr_t physical_command_list;
             paddr_t physical_command_table;
-            auto place = placement_kalloc(sizeof(command_list_entry) * COMMAND_LIST_ENTRY_COUNT,
+            auto place = placement_kalloc(sizeof(command_list) * COMMAND_LIST_ENTRY_COUNT,
                                           &physical_command_list, true);
             if (place == nullptr) {
                 // TODO: handle ahci error, out of memory
             }
 
-            memset(place, 0, sizeof(command_list_entry) * COMMAND_LIST_ENTRY_COUNT);
+            memset(place, 0, sizeof(command_list) * COMMAND_LIST_ENTRY_COUNT);
             abar_->ports[i].comm_list_base_addr_lo = ptr_from(physical_command_list) & 0xffff'ffff;
             abar_->ports[i].comm_list_base_addr_hi = ptr_from(physical_command_list) >> 32;
 
-            auto cmd_list = reinterpret_cast<command_list_entry*>(place);
-            place = placement_kalloc(sizeof(hba_cmd_tbl) + sizeof(hba_prdt_entry) * PRD_TABLE_ENTRY_COUNT,
+            auto cmd_list = reinterpret_cast<command_list*>(place);
+            place = placement_kalloc(sizeof(command_table) + sizeof(descriptor_table) * PRD_TABLE_ENTRY_COUNT,
                                      &physical_command_table, true);
             cmd_list->command_table_base_addr_lo = ptr_from(physical_command_table) & 0xffff'ffff;
             cmd_list->command_table_base_addr_hi = ptr_from(physical_command_table) >> 32;
@@ -202,6 +199,28 @@ namespace xenon
 
         // 4. determine how many command slots HBA supports, capabilities.Number Command Slots
         total_cmd_slots_ = (abar_->capabilities >> 8) & 0x1f;
+    }
+
+    auto ahci::ahci_controller::sata_get_port()
+    {
+        hba_port *port = nullptr;
+        auto ports = abar_->ports_implemented;
+        for (int i = 0; i < 32; i++, ports >>= 1) {
+            // port not implemented: skip it
+            if ((ports & 0x1) == 0) {
+                continue;
+            }
+
+            // only handle SATA devices
+            if (check_type(&abar_->ports[i]) != SIG::SATA) {
+                continue;
+            }
+
+            port = &abar_->ports[i];
+            break;
+        }
+
+        return port;
     }
 
     void ahci::ahci_controller::reset(hba_port *port)
@@ -258,55 +277,44 @@ namespace xenon
 
     void ahci::ahci_controller::sata_identify()
     {
-        hba_port *port = nullptr;
-        auto ports = abar_->ports_implemented;
-        for (int i = 0; i < 32; i++, ports >>= 1) {
-            // port not implemented: skip it
-            if ((ports & 0x1) == 0) {
-                continue;
-            }
-
-            // only handle SATA devices
-            if (check_type(&abar_->ports[i]) != SIG::SATA) {
-                continue;
-            }
-
-            port = &abar_->ports[i];
-            break;
-        }
-
-        paddr_t pbuffer;
-        char *buffer = reinterpret_cast<char*>(placement_kalloc(2048, &pbuffer));
-        memset(buffer, 0, 2048);
-        auto slot = find_cmdslot(port, total_cmd_slots_);
-        if (slot == -1) {
+        auto port = sata_get_port();
+        if (port == nullptr) {
+            logger::instance().log("Error: can't find a SATA port available");
             return;
         }
 
-        uintptr_t addr = static_cast<uintptr_t>(port->comm_list_base_addr_hi) << 32 | port->comm_list_base_addr_lo;
-        addr += KVIRTUAL_ADDRESS;
-        auto cmd_list = reinterpret_cast<command_list_entry*>(addr);
+        auto physical_sata = kvirt_to_physical(ptr_from(&identifier_));
+
+        auto slot = find_cmdslot(port, total_cmd_slots_);
+        if (slot == -1) {
+            logger::instance().log("Error: can't find a SATA port available");
+            return;
+        }
+
+        auto cmd_list = reinterpret_cast<command_list*>((
+                    static_cast<uintptr_t>(port->comm_list_base_addr_hi) << 32 |
+                    port->comm_list_base_addr_lo) + KVIRTUAL_ADDRESS);
         cmd_list += slot;
-        cmd_list->command_fis_length = sizeof(host_to_device) / sizeof(int32_t);
+        cmd_list->command_fis_length = sizeof(hba_to_device) / sizeof(int32_t);
         cmd_list->write = 0;
         cmd_list->prefetchable = 1;
         cmd_list->prdt_length = 1;
 
-        addr = static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 | cmd_list->command_table_base_addr_lo;
-        addr += KVIRTUAL_ADDRESS;
-        hba_cmd_tbl *table = reinterpret_cast<hba_cmd_tbl*>(addr);
+        auto cmd_table = reinterpret_cast<command_table*>((
+                    static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 |
+                    cmd_list->command_table_base_addr_lo) + KVIRTUAL_ADDRESS);
+        cmd_table->descriptor_entry[0].data_base_address_lo = physical_sata & 0xfff'fffff;
+        cmd_table->descriptor_entry[0].data_base_address_hi = physical_sata >> 32;
+        cmd_table->descriptor_entry[0].data_byte_count = 511;
+        cmd_table->descriptor_entry[0].interrupt_on_completition = 1;
 
-        table->prdt_entry[0].dba = ptr_from(pbuffer) & 0xfff'fffff;
-        table->prdt_entry[0].dbau = ptr_from(pbuffer) >> 32;
-        table->prdt_entry[0].dbc = 511;
-        table->prdt_entry[0].i = 1;
-
-        host_to_device *to_dev = reinterpret_cast<host_to_device*>(&table->cfis);
-        to_dev->fis_type = 0x27 /*static_cast<uint8_t>(ahci::FIS_TYPES::FIS_TYPE_REG_H2D)*/;
-        to_dev->c = 1;
+        hba_to_device *to_dev = reinterpret_cast<hba_to_device*>(&cmd_table->command_cfis);
+        to_dev->fis_type = static_cast<uint8_t>(ahci::FIS_TYPES::FIS_TYPE_REG_H2D);
+        to_dev->cmd_control = 1;
         to_dev->command = 0xec;
         to_dev->device = 0;
 
+        // issue the command
         port->command_issue = 1;
 
         while (true) {
@@ -323,8 +331,11 @@ namespace xenon
             return;
         }
 
-        SATA_ident *st = reinterpret_cast<SATA_ident*>(buffer);
-        print_br(st->model, 40);
+        // fix those byte inverted AHCI strings
+        convert_ahci_string(identifier_.model, sizeof(identifier_.model));
+        convert_ahci_string(identifier_.firmware, sizeof(identifier_.firmware));
+        convert_ahci_string(identifier_.serial, sizeof(identifier_.serial));
+        logger::instance().log("%s, %s, %s", identifier_.model, identifier_.serial, identifier_.firmware);
     }
 
     void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
@@ -340,12 +351,12 @@ namespace xenon
         }
 
         // 3. Build command header at PxCLB[CH(pFreeSlot)]:
-        uintptr_t addr = static_cast<uintptr_t>(port->comm_list_base_addr_hi) << 32 | port->comm_list_base_addr_lo;
-        addr += KVIRTUAL_ADDRESS;
-        auto cmd_list = reinterpret_cast<command_list_entry*>(addr);
+        auto cmd_list = reinterpret_cast<command_list*>((
+                    static_cast<uintptr_t>(port->comm_list_base_addr_hi) << 32 |
+                    port->comm_list_base_addr_lo) + KVIRTUAL_ADDRESS);
         cmd_list += slot;
         //    CFL set to the length of the command in CFIS area
-        cmd_list->command_fis_length = sizeof(host_to_device) / sizeof(int32_t);
+        cmd_list->command_fis_length = sizeof(hba_to_device) / sizeof(int32_t);
         //    W(rite) bit set if data is going to the device
         cmd_list->write = (command == 0x35) ? 1 : 0;
         //    P(refetch) optional
@@ -353,37 +364,32 @@ namespace xenon
         //    PRDTL containing the number of entries in PRD table
         cmd_list->prdt_length = ((count - 1) >> 4) + 1;
 
-        addr = static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 | cmd_list->command_table_base_addr_lo;
-        addr += KVIRTUAL_ADDRESS;
-        hba_cmd_tbl *table = reinterpret_cast<hba_cmd_tbl*>(addr);
+        auto cmd_table = reinterpret_cast<command_table*>((
+                    static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 |
+                    cmd_list->command_table_base_addr_lo) + KVIRTUAL_ADDRESS);
         uint16_t i = 0;
         for (; i < cmd_list->prdt_length - 1; i++ ) {
-            table->prdt_entry[i].dba = buffer & 0xffffffff;
-            table->prdt_entry[i].dbau = buffer << 32;
-            table->prdt_entry[i].dbc = 8_KB - 1;
-            table->prdt_entry[i].i = 0;
+            cmd_table->descriptor_entry[i].data_base_address_lo = buffer & 0xffff'ffff;
+            cmd_table->descriptor_entry[i].data_base_address_hi = buffer << 32;
+            cmd_table->descriptor_entry[i].data_byte_count = 8_KB - 1;
+            cmd_table->descriptor_entry[i].interrupt_on_completition = 0;
             buffer += 4_KB;
             count -= 16;
         }
 
-        table->prdt_entry[i].dba = buffer & 0xffffffff;
-        table->prdt_entry[i].dbau = buffer << 32;
-        table->prdt_entry[i].dbc = count << 9;
-        table->prdt_entry[i].i = 0;
-
-        host_to_device *to_dev = reinterpret_cast<host_to_device*>(&table->cfis);
+        hba_to_device *to_dev = reinterpret_cast<hba_to_device*>(&cmd_table->command_cfis);
         to_dev->fis_type = static_cast<uint8_t>(ahci::FIS_TYPES::FIS_TYPE_REG_H2D);
-        to_dev->c = 1;
+        to_dev->cmd_control = 1;
         to_dev->command = command;
         to_dev->device = 1 << 6; // LBA mode
-        to_dev->lba0 = static_cast<uint8_t>(start_lo);
-        to_dev->lba1 = static_cast<uint8_t>(start_lo >> 8);
-        to_dev->lba2 = static_cast<uint8_t>(start_lo >> 16);
-        to_dev->lba3 = static_cast<uint8_t>(start_lo >> 24);
-        to_dev->lba4 = static_cast<uint8_t>(start_hi);
-        to_dev->lba5 = static_cast<uint8_t>(start_hi >> 8);
-        to_dev->countl = count & 0xff;
-        to_dev->counth = count >> 8;
+        to_dev->lba_sector = static_cast<uint8_t>(start_lo);
+        to_dev->lba_cylinder_lo = static_cast<uint8_t>(start_lo >> 8);
+        to_dev->lba_cylinder_hi = static_cast<uint8_t>(start_lo >> 16);
+        to_dev->lba_sector_exp = static_cast<uint8_t>(start_lo >> 24);
+        to_dev->lba_cylinder_lo_exp = static_cast<uint8_t>(start_hi);
+        to_dev->lba_cylinder_hi_exp = static_cast<uint8_t>(start_hi >> 8);
+        to_dev->count_lo = count & 0xff;
+        to_dev->count_hi = count >> 8;
 
         port->command_issue = 1;
 
@@ -468,6 +474,30 @@ namespace xenon
         // https://github.com/haiku/haiku/blob/7f8f4c9c8c1d951b3fa1ad1b7315cf900c6b5fd6/src/add-ons/kernel/busses/scsi/ahci/ahci_port.cpp
         // https://github.com/haiku/haiku/blob/7f8f4c9c8c1d951b3fa1ad1b7315cf900c6b5fd6/src/add-ons/kernel/busses/scsi/ahci/ahci_port.cpp
         // https://github.com/haiku/haiku/blob/7f8f4c9c8c1d951b3fa1ad1b7315cf900c6b5fd6/src/add-ons/kernel/busses/scsi/ahci/ahci_port.cpp
+    }
+
+    void ahci::ahci_controller::sata_read(uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer)
+    {
+        auto port = sata_get_port();
+        if (port == nullptr) {
+            logger::instance().log("Error: SATA read: can't find a SATA port available");
+            return;
+        }
+
+        // 0x25 - Read DMA Ext
+        sata_execute(port, 0x25, start_lo, start_hi, count, buffer);
+    }
+
+    void ahci::ahci_controller::sata_write(uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer)
+    {
+        auto port = sata_get_port();
+        if (port == nullptr) {
+            logger::instance().log("Error: SATA write: can't find a SATA port available");
+            return;
+        }
+
+        // 0x35 - Write DMA Ext
+        sata_execute(port, 0x35, start_lo, start_hi, count, buffer);
     }
 
     bool ahci::ahci_controller::wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time)

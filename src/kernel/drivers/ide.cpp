@@ -16,6 +16,5 @@ namespace xenon
         auto abar = reinterpret_cast<ahci::hba_memory*>(abar_tmp);
 
         auto controller = new ahci::ahci_controller(abar);
-        controller->sata_identify();
     }
 }

@@ -38,6 +38,12 @@
     {
         return ALIGN_DOWN(address + FRAME_SIZE - 1);
     }
+
+    constexpr uintptr_t kvirt_to_physical(uintptr_t addr)
+    {
+        return addr - KVIRTUAL_ADDRESS;
+    }
+
 #else
     #define X86_CR0_PE           (1UL)       /* Protected */
     #define X86_CR0_PG           (1UL << 31) /* Paging */
