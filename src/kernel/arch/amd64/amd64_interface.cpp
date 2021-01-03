@@ -13,75 +13,72 @@
 
 #include <klib/new.h>
 
-namespace xenon
+int amd64_interface::init_pci()
 {
-    int amd64_interface::init_pci()
-    {
-        pci_ = new amd64_pci();
+    pci_ = new amd64_pci();
 
-        return 0;
-    }
+    return 0;
+}
 
-    int amd64_interface::init_interrupts()
-    {
-        segments::idt_setup();
-        segments::gdt_setup();
+int amd64_interface::init_interrupts()
+{
+    segments::idt_setup();
+    segments::gdt_setup();
 
-        return 0;
-    }
+    return 0;
+}
 
-    int amd64_interface::init_paging()
-    {
-        map_kernel_memory();
-        paging_ = new amd64_paging();
+int amd64_interface::init_paging()
+{
+    map_kernel_memory();
+    paging_ = new amd64_paging();
 
-        return 0;
-    }
+    return 0;
+}
 
-    int amd64_interface::init_timer()
-    {
-        timer_ = new amd64_timer(10);
+int amd64_interface::init_timer()
+{
+    timer_ = new amd64_timer(10);
 
-        return 0;
-    }
+    return 0;
+}
 
-    void amd64_interface::assign_irq(irq_handler *hdl)
-    {
-        xenon::assign_irq(0, hdl);
-    }
+void amd64_interface::assign_irq(irq_handler *hdl)
+{
+    ::assign_irq(0, hdl);
+}
 
-    int amd64_interface::init_processes()
-    {
-        // https://forum.osdev.org/viewtopic.php?f=1&t=15622
-        // - create a new page directory (mapped into kernel space)
-        // - copy kernel page tables into the new page directory
-        // - setup scheduler data (thread priority, etc), and set initial RIP to a start_process kernel function
-        // - (optional) wait or block until the new thread some sort of status to return
-        // - return to caller
-        process_controller_ = new amd64_process_controller();
-        auto pid = process_controller_->create_process(KSTACK_ADDR,
-                                                       KSTACK_SIZE,
-                                                       0,
-                                                       "[kernel]");
-        process_controller_->set_running(pid);
+int amd64_interface::init_processes()
+{
+    // https://forum.osdev.org/viewtopic.php?f=1&t=15622
+    // - create a new page directory (mapped into kernel space)
+    // - copy kernel page tables into the new page directory
+    // - setup scheduler data (thread priority, etc), and set initial RIP to a start_process kernel function
+    // - (optional) wait or block until the new thread some sort of status to return
+    // - return to caller
+    process_controller_ = new amd64_process_controller();
+    auto pid = process_controller_->create_process(KSTACK_ADDR,
+                                                   KSTACK_SIZE,
+                                                   0,
+                                                   "[kernel]");
+    process_controller_->set_running(pid);
 
-        return 0;
-    }
+    return 0;
+}
 
-    keyboard *amd64_interface::create_keyboard()
-    {
-        return new amd64_keyboard();
-    }
+keyboard *amd64_interface::create_keyboard()
+{
+    return new amd64_keyboard();
+}
 
-    ide *amd64_interface::create_ide()
-    {
-        return new amd64_ide();
-    }
+ide *amd64_interface::create_ide()
+{
+    return new amd64_ide();
+}
 
-    void amd64_interface::cpu_halt()
-    {
-        sti();
-        halt();
-        cli();
-    }
+void amd64_interface::cpu_halt()
+{
+    sti();
+    halt();
+    cli();
 }

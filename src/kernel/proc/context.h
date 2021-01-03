@@ -3,17 +3,14 @@
 
 #include <klib/stdint.h>
 
-namespace xenon
-{
-    struct context_regs;
+struct context_regs;
 
-    class context
-    {
-    public:
-        virtual ~context()               = 0;
-        virtual context_regs *get_regs() = 0;
-        virtual void save()              = 0;
-    };
-}
+class context
+{
+public:
+    virtual ~context()               = 0;
+    virtual context_regs *get_regs() = 0;
+    virtual void save()              = 0;
+};
 
 #endif // CONTEXT_H

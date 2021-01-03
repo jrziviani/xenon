@@ -3,13 +3,10 @@
 
 #include <klib/stdint.h>
 
-namespace xenon
+namespace segments
 {
-    namespace segments
-    {
-        void gdt_setup();
-        void idt_setup();
-    }
+    void gdt_setup();
+    void idt_setup();
 }
 
 extern "C"

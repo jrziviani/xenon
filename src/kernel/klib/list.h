@@ -4,10 +4,10 @@
 #include <memory/allocators.h>
 #include "new.h"
 
-namespace xenon
+namespace klib
 {
     template <typename T, class Alloc=basic_allocator>
-    class llist
+    class list
     {
         struct node
         {
@@ -89,13 +89,13 @@ namespace xenon
     public:
         using const_iterator = const iterator;
 
-        llist() :
+        list() :
             head_(nullptr),
             tail_(nullptr)
         {
         }
 
-        ~llist()
+        ~list()
         {
             clear();
         }
@@ -211,4 +211,4 @@ namespace xenon
     };
 }
 
-#endif // LLIST_H
+#endif // LIST_H

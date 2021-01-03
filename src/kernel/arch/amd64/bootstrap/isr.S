@@ -122,7 +122,7 @@ FN_HEADER(isr_handler)
     push %rax
 
     mov  %rsp, %rdi
-    call _ZN5xenon17excpetion_handlerERKNS_5faultE
+    call _Z17exception_handlerRK5fault
 
     pop  %rax
     mov  %ax, %ds
@@ -139,7 +139,7 @@ FN_HEADER(irq_handler)
     push %rax
 
     mov  %rsp, %rdi
-    call _ZN5xenon17interrupt_handlerERKNS_5faultE
+    call _Z17interrupt_handlerRK5fault
 
     pop  %rax
     mov  %ax, %ds

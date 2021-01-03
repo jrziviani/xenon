@@ -11,30 +11,27 @@ const uint8_t REPEAT_MODE   = 0x36;
 
 const uint32_t PIT_CLOCK = 1193180;
 
-namespace xenon
+amd64_timer::amd64_timer(uint64_t frequency) :
+    frequency_(frequency)
 {
-    amd64_timer::amd64_timer(uint64_t frequency) :
-        frequency_(frequency)
-    {
-        if (frequency == 0) {
-            // panic
-            return;
-        }
-
-        uint8_t lo = (PIT_CLOCK / frequency) & 0xff;
-        uint8_t hi = ((PIT_CLOCK / frequency) >> 8) & 0xff;
-
-        outb(COMMAND_PORT, REPEAT_MODE);
-        outb(DATA_PORT_0, lo);
-        outb(DATA_PORT_0, hi);
+    if (frequency == 0) {
+        // panic
+        return;
     }
 
-    amd64_timer::~amd64_timer()
-    {
-    }
+    uint8_t lo = (PIT_CLOCK / frequency) & 0xff;
+    uint8_t hi = ((PIT_CLOCK / frequency) >> 8) & 0xff;
 
-    void amd64_timer::wait_for(uint64_t miliseconds)
-    {
-        clock::wait_for(miliseconds);
-    }
+    outb(COMMAND_PORT, REPEAT_MODE);
+    outb(DATA_PORT_0, lo);
+    outb(DATA_PORT_0, hi);
+}
+
+amd64_timer::~amd64_timer()
+{
+}
+
+void amd64_timer::wait_for(uint64_t miliseconds)
+{
+    clock::wait_for(miliseconds);
 }

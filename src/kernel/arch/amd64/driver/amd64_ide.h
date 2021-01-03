@@ -4,13 +4,10 @@
 #include <drivers/ide.h>
 #include <drivers/bus/pci.h>
 
-namespace xenon
+class amd64_ide : public ide
 {
-    class amd64_ide : public ide
-    {
-    public:
-        void on_disk_event() final;
-    };
-}
+public:
+    void on_disk_event() final;
+};
 
 #endif // AMD64_IDE

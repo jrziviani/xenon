@@ -21,74 +21,71 @@
 [4] - restore
 */
 
-namespace xenon
+pid_t next_pid = 0;
+
+process::process(uintptr_t kstack_addr,
+                 size_t kstack_size,
+                 uintptr_t nip,
+                 const char *name) :
+    pid_(next_pid++),
+    kstack_addr_(kstack_addr),
+    kstack_len_(kstack_size)
 {
-    pid_t next_pid = 0;
+    (void)nip;
+    auto len = klib::strlen(name);
+    klib::strncpy(name_, name, (len >= 64) ? 64 : len);
 
-    process::process(uintptr_t kstack_addr,
-                     size_t kstack_size,
-                     uintptr_t nip,
-                     const char *name) :
-        pid_(next_pid++),
-        kstack_addr_(kstack_addr),
-        kstack_len_(kstack_size)
-    {
-        (void)nip;
-        auto len = strlen(name);
-        strncpy(name_, name, (len >= 64) ? 64 : len);
-
-        // create a new stack for the process if no
-        // address for stack was passed
-        if (kstack_addr == 0) {
-            char *stack = new char[kstack_size];
-            kstack_addr_ = ptr_from(stack) + kstack_len_;
-        }
-
-        // create a new address space for this process
-        top_dir_ = ptr_from(manager::instance().create_address_space());
+    // create a new stack for the process if no
+    // address for stack was passed
+    if (kstack_addr == 0) {
+        char *stack = new char[kstack_size];
+        kstack_addr_ = ptr_from(stack) + kstack_len_;
     }
 
-    process::~process()
-    {
-        char *stack = ptr_to<char*>(kstack_addr_ - kstack_len_);
-        delete[] stack;
+    // create a new address space for this process
+    top_dir_ = ptr_from(manager::instance().create_address_space());
+}
 
-        paddr_t top = ptr_to<paddr_t>(top_dir_);
-        manager::instance().destroy_address_space(top);
-    }
+process::~process()
+{
+    char *stack = ptr_to<char*>(kstack_addr_ - kstack_len_);
+    delete[] stack;
 
-    size_t process::get_kstack_len() const
-    {
-        return kstack_len_;
-    }
+    paddr_t top = ptr_to<paddr_t>(top_dir_);
+    manager::instance().destroy_address_space(top);
+}
 
-    size_t process::get_ustack_len() const
-    {
-        return ustack_len_;
-    }
+size_t process::get_kstack_len() const
+{
+    return kstack_len_;
+}
 
-    pid_t process::get_pid() const
-    {
-        return pid_;
-    }
+size_t process::get_ustack_len() const
+{
+    return ustack_len_;
+}
 
-    process *process::get_parent()
-    {
-        return parent_;
-    }
+pid_t process::get_pid() const
+{
+    return pid_;
+}
 
-    PROC_STATE process::get_state() const
-    {
-        return state_;
-    }
+process *process::get_parent()
+{
+    return parent_;
+}
 
-    void process::set_state(PROC_STATE state)
-    {
-        state_ = state;
-    }
+PROC_STATE process::get_state() const
+{
+    return state_;
+}
 
-    void process::set_parent(process *parent)
-    {
-        parent_ = parent;
-    }
+void process::set_state(PROC_STATE state)
+{
+    state_ = state;
+}
+
+void process::set_parent(process *parent)
+{
+    parent_ = parent;
 }

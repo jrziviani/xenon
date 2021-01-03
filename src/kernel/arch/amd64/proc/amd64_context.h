@@ -7,48 +7,45 @@
     #include <proc/process.h>
     #include <arch/amd64/instructions.h>
 
-    namespace xenon
+    struct context_regs
     {
-        struct context_regs
+        uint64_t r15;
+        uint64_t r14;
+        uint64_t r13;
+        uint64_t r12;
+        uint64_t rbp;
+        uint64_t rsp;
+        uint64_t rbx;
+        uint64_t rip;
+        uint64_t cr0;
+        uint64_t cr2;
+        uint64_t cr3;
+        uint64_t cr4;
+        uint64_t rdi;
+        uint64_t rsi;
+    };
+
+    extern "C" void save_context(context_regs *regs);
+
+    class amd64_context : public context
+    {
+        context_regs regs_;
+
+    public:
+        ~amd64_context() final
         {
-            uint64_t r15;
-            uint64_t r14;
-            uint64_t r13;
-            uint64_t r12;
-            uint64_t rbp;
-            uint64_t rsp;
-            uint64_t rbx;
-            uint64_t rip;
-            uint64_t cr0;
-            uint64_t cr2;
-            uint64_t cr3;
-            uint64_t cr4;
-            uint64_t rdi;
-            uint64_t rsi;
-        };
+        }
 
-        extern "C" void save_context(context_regs *regs);
-
-        class amd64_context : public context
+        context_regs *get_regs() final
         {
-            context_regs regs_;
+            return &regs_;
+        }
 
-        public:
-            ~amd64_context() final
-            {
-            }
-
-            context_regs *get_regs() final
-            {
-                return &regs_;
-            }
-
-            void save() final
-            {
-                save_context(&regs_);
-            }
-        };
-    }
+        void save() final
+        {
+            save_context(&regs_);
+        }
+    };
 
 #else // __ASSEMBLER__
 

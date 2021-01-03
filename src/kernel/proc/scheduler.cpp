@@ -2,19 +2,16 @@
 
 #include <klib/logger.h>
 
-namespace xenon
+scheduler::scheduler(process_controller &controller) :
+    process_controller_(controller)
 {
-    scheduler::scheduler(process_controller &controller) :
-        process_controller_(controller)
-    {
-    }
+}
 
-    scheduler::~scheduler()
-    {
-    }
+scheduler::~scheduler()
+{
+}
 
-    void scheduler::on_time()
-    {
-        process_controller_.set_running_from_queue();
-    }
+void scheduler::on_time()
+{
+    process_controller_.set_running_from_queue();
 }

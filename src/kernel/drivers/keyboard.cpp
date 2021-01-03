@@ -116,63 +116,60 @@ constexpr char NUM    = 0x10;
 constexpr char SCROLL = 0x20;
 constexpr char ESC    = 0x40;
 
-namespace xenon
+enum class keycode_t
 {
-    enum class keycode_t
-    {
-        /*
-    #define X(name, shift_name, code, shift_code) name,
-        KEY_CODES
-    #undef X
+    /*
+#define X(name, shift_name, code, shift_code) name,
+    KEY_CODES
+#undef X
 */
-            /*
-    #define X(name, shift_name, code, shift_code) shift_name,
-        KEY_CODES
-    #undef X
-    */
-    };
-
         /*
-    static const char *keycode_to_str(const keycode_t *key)
-    {
-        switch (key) {
-    #define X(name, shift_name, code, shift_code) \
-            case keycode_t::name: return #name;   \
-            case keycode_t::shift_name: return #shift_name;
-            KEY_CODES
-    #undef X
+#define X(name, shift_name, code, shift_code) shift_name,
+    KEY_CODES
+#undef X
+*/
+};
 
-            default:
-                return "undefined";
-        }
-        return "";
+    /*
+static const char *keycode_to_str(const keycode_t *key)
+{
+    switch (key) {
+#define X(name, shift_name, code, shift_code) \
+        case keycode_t::name: return #name;   \
+        case keycode_t::shift_name: return #shift_name;
+        KEY_CODES
+#undef X
+
+        default:
+            return "undefined";
     }
-        */
+    return "";
+}
+    */
 
-    void keyboard::on_keyup(unsigned char c)
-    {
-        switch (c) {
-            case 0xaa: // left shift release
-            case 0xb6: // right shift release
-                shift_ = 0;
-                return;
-        }
+void keyboard::on_keyup(unsigned char c)
+{
+    switch (c) {
+        case 0xaa: // left shift release
+        case 0xb6: // right shift release
+            shift_ = 0;
+            return;
+    }
+}
+
+void keyboard::on_keydown(unsigned char c)
+{
+    switch (c) {
+        case 0x2a: // left shift
+        case 0x36: // right shift
+            shift_ = 1;
+            return;
     }
 
-    void keyboard::on_keydown(unsigned char c)
-    {
-        switch (c) {
-            case 0x2a: // left shift
-            case 0x36: // right shift
-                shift_ = 1;
-                return;
-        }
-
-        if (shift_) {
-            logger::instance().raw(en_US_shift[c]);
-        }
-        else {
-            logger::instance().raw(en_US[c]);
-        }
+    if (shift_) {
+        klib::logger::instance().raw(en_US_shift[c]);
+    }
+    else {
+        klib::logger::instance().raw(en_US[c]);
     }
 }

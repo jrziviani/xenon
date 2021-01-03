@@ -6,12 +6,12 @@
 #include <drivers/keyboard.h>
 #include <drivers/irq_handler.h>
 #include <drivers/bus/pci.h>
-#include <drivers/ide.h>
+#include <drivers/controller/ahci.h>
 
 #include "arch_factory.h"
 #include "config.h"
 
-using namespace xenon;
+using namespace klib;
 
 void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 {
@@ -65,8 +65,9 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 
     devices->scan_hw();
 
+    //llist<device_interface*>
     for (const auto device : *devices) {
-        ide::detect_ide(device);
+        ahci::detect(device);
     }
 
     while (true) {

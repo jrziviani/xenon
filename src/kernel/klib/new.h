@@ -26,7 +26,7 @@ void operator delete[](void*, void*) noexcept;
 void operator delete(void*, unsigned long) noexcept;
 void operator delete[](void*, unsigned long) noexcept;
 
-namespace xenon
+namespace klib
 {
     struct placement_new
     {

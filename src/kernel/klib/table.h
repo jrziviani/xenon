@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 
-namespace xenon
+namespace klib
 {
     class table
     {

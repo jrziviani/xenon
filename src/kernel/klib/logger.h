@@ -10,7 +10,7 @@
 // TODO: this dep shouldn't exist...
 #include <arch/amd64/video/vga_terminal.h>
 
-namespace xenon
+namespace klib
 {
     enum class logger_output : uint8_t
     {

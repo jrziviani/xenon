@@ -3,12 +3,10 @@
 
 #include "char_device.h"
 
-namespace xenon
-{
-    enum class keycode_t;
+enum class keycode_t;
 
-    class keyboard : public char_device
-    {
+class keyboard : public char_device
+{
     protected:
         unsigned int shift_;
 
@@ -20,7 +18,6 @@ namespace xenon
         virtual void on_keyboard()
         {
         }
-    };
 };
 
 #endif // KEYBOARD_H

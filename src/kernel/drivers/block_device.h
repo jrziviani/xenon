@@ -4,11 +4,8 @@
 #include <klib/stdint.h>
 #include "klib/xenon_base.h"
 
-namespace xenon
+class block_device : public xenon_base
 {
-    class block_device : public xenon_base
-    {
-    };
-}
+};
 
 #endif // BLOCK_DEVICE_H

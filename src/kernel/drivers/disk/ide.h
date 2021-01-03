@@ -4,31 +4,29 @@
 #include <klib/stdint.h>
 #include <drivers/block_device.h>
 
-namespace xenon
+struct ide_channel
 {
-    struct ide_channel
-    {
-        uint16_t base;  // I/O base
-        uint16_t ctrl;  // Control base
-        uint16_t bmine; // Bus master IDE
-        uint8_t  nIEN;  // nIEN (no interrupt)
-    };
+    uint16_t base;  // I/O base
+    uint16_t ctrl;  // Control base
+    uint16_t bmine; // Bus master IDE
+    uint8_t  nIEN;  // nIEN (no interrupt)
+};
 
-    struct ide_device
-    {
-        uint8_t  reserved;    // 1 - drive really exists
-        uint8_t  channel;     // 0 - primary ch, 1 - secondary
-        uint8_t  drive;       // 0 - master, 2 - slave
-        uint16_t type;        // 0 - ATA, 1 - ATAPI
-        uint16_t signature;   // drive signature
-        uint16_t capabilities;// features
-        uint32_t commands;    // command sets supported
-        uint32_t size;        // size in sectors
-        uint8_t  model[41];   // model
-    };
+struct ide_device
+{
+    uint8_t  reserved;    // 1 - drive really exists
+    uint8_t  channel;     // 0 - primary ch, 1 - secondary
+    uint8_t  drive;       // 0 - master, 2 - slave
+    uint16_t type;        // 0 - ATA, 1 - ATAPI
+    uint16_t signature;   // drive signature
+    uint16_t capabilities;// features
+    uint32_t commands;    // command sets supported
+    uint32_t size;        // size in sectors
+    uint8_t  model[41];   // model
+};
 
-    class ide : public block_device
-    {
+class ide : public block_device
+{
     public:
         ide();
 
@@ -44,7 +42,6 @@ namespace xenon
         int read(uint32_t index, char *buffer) final;
         int write(uint32_t index, const char *buffer) final;
 
-    };
-}
+};
 
 #endif // IDE_H

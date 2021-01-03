@@ -3,7 +3,7 @@
 
 #include <memory/allocators.h>
 
-namespace xenon
+namespace klib
 {
     template <typename T>
     class bst

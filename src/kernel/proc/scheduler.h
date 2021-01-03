@@ -7,18 +7,15 @@
 #include <klib/logger.h>
 #include <drivers/irq_handler.h>
 
-namespace xenon
+class scheduler : public xenon_base
 {
-    class scheduler : public xenon_base
-    {
-        process_controller &process_controller_;
+    process_controller &process_controller_;
 
-    public:
-        scheduler(process_controller &controller);
-        ~scheduler();
+public:
+    scheduler(process_controller &controller);
+    ~scheduler();
 
-        void on_time() final;
-    };
-}
+    void on_time() final;
+};
 
 #endif // SCHEDULER_H

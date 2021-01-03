@@ -2,22 +2,22 @@
 
 void *operator new(size_t size)
 {
-    return xenon::kalloc(size);
+    return kalloc(size);
 }
 
 void *operator new[](size_t size)
 {
-    return xenon::kalloc(size);
+    return kalloc(size);
 }
 
 void operator delete(void *p)
 {
-    return xenon::kfree(p);
+    return kfree(p);
 }
 
 void operator delete[](void *p)
 {
-    return xenon::kfree(p);
+    return kfree(p);
 }
 
 void operator delete(void*, void*) noexcept

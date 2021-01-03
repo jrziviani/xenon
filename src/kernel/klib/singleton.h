@@ -3,7 +3,7 @@
 
 #include "type_traits.h"
 
-namespace xenon
+namespace klib
 {
     template <typename T>
     class singleton
