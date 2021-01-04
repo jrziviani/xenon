@@ -44,7 +44,8 @@ add_custom_command(TARGET kernel POST_BUILD
 
 add_custom_target(qemu
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                  COMMAND qemu-img create hda.qcow2 -f qcow2 256M
+                  COMMAND qemu-img create hda.img -f raw 128M
+                  COMMAND mkfs.ext2 hda.img
                   COMMAND qemu-system-x86_64
                       -m 1G
                       -machine q35,accel=tcg
@@ -52,7 +53,7 @@ add_custom_target(qemu
                       -d cpu_reset
                       -no-shutdown
                       -device ide-hd,bus=ide.0,drive=drive-sata0-0-0,id=sata0-0-0,bootindex=1
-                      -drive file=hda.qcow2,format=qcow2,if=none,id=drive-sata0-0-0
+                      -drive file=hda.img,format=raw,if=none,id=drive-sata0-0-0
                   DEPENDS kernel)
 
 add_custom_target(qemu-debug
