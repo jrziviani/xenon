@@ -47,8 +47,8 @@ public:
     int mmap(vaddr_t addr, size_t size, uint8_t flags);
     void unmap(vaddr_t addr, size_t size);
 
-    int mapio(uintptr_t dev_addr, size_t size, uint8_t flags);
-    void unmapio(uintptr_t dev_addr);
+    vaddr_t mapio(uintptr_t dev_addr, size_t size, uint8_t flags);
+    void unmapio(vaddr_t vaddr);
 
     vaddr_t kalloc(size_t size);
     void kfree(vaddr_t addr);

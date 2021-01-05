@@ -93,16 +93,16 @@ void manager__::unmap(vaddr_t addr, size_t size)
     paging_->unmap(addr);
 }
 
-int manager__::mapio(uintptr_t dev_addr, size_t size, uint8_t flags)
+vaddr_t manager__::mapio(uintptr_t dev_addr, size_t size, uint8_t flags)
 {
     (void)size;
 
     return paging_->mapio(dev_addr, flags);
 }
 
-void manager__::unmapio(uintptr_t dev_addr)
+void manager__::unmapio(vaddr_t vaddr)
 {
-    paging_->unmapio(dev_addr);
+    paging_->unmapio(vaddr);
 }
 
 vaddr_t manager__::kalloc(size_t size)

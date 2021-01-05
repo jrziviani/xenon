@@ -164,24 +164,23 @@ int amd64_paging::map(vaddr_t vaddr, paddr_t paddr, uint8_t flags)
     return map(get_current_page(), vaddr, paddr, flags);
 }
 
-int amd64_paging::mapio(uintptr_t addr, uint8_t flags)
+vaddr_t amd64_paging::mapio(uintptr_t addr, uint8_t flags)
 {
     (void)flags;
 
-    uintptr_t offset = addr & ~0xfeb00000;
+    uintptr_t offset = addr & ~0xfff0'0000;
     vaddr_t vaddr = ptr_to<vaddr_t>(PCI_VIRTUAL_ADDRESS + offset);
-    auto pte = PTE(PCI_VIRTUAL_ADDRESS + offset);
+    auto pte = PTE(PCI_VIRTUAL_ADDRESS | offset);
 
     pte_t *page = get_page(get_current_page(), vaddr, true);
     page->pages[pte] = addr + 0x3;
 
-    return 0;
+    return vaddr;
 }
 
-void amd64_paging::unmapio(uintptr_t addr)
+void amd64_paging::unmapio(vaddr_t vaddr)
 {
-    addr &= ~0xfeb00000;
-    unmap(ptr_to<vaddr_t>(PCI_VIRTUAL_ADDRESS + addr));
+    unmap(vaddr);
 }
 
 paddr_t amd64_paging::create_top_page_directory()
