@@ -4,8 +4,11 @@
 #include "ahci_structs.h"
 
 #include <klib/stdint.h>
+#include <klib/list.h>
+#include <klib/cmemory.h>
 #include <drivers/device_interface.h>
 #include <drivers/bus/pci.h>
+#include <drivers/block_device.h>
 
 /*
                  +-----+
@@ -52,6 +55,7 @@ namespace ahci
         hba_memory *abar_;
         uint32_t total_cmd_slots_;
         SATA_ident identifier_;
+        klib::list<klib::unique_ptr<block_device>> devices_;
 
     public:
         ahci_controller(hba_memory *abar);
