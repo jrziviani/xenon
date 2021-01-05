@@ -196,6 +196,11 @@ namespace klib
             return data_[i];
         }
 
+        T &operator[](size_t i)
+        {
+            return data_[i];
+        }
+
         T *release() noexcept
         {
             T *result = nullptr;
