@@ -19,4 +19,4 @@ Debugging the code with GDB is simple:
 ```
 
 It will launch QEMU in debug mode and start GDB in a new terminal:
-![debug screenshot](pics/debug.png)
+![debug screenshot](pics/debug.jpg)
