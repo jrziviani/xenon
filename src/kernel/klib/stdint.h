@@ -17,6 +17,8 @@ using paddr_t       = void*;
 
 using pid_t         = int;
 
+typedef decltype(nullptr) nullptr_t;
+
 constexpr uint64_t operator"" _KB(uint64_t b)
 {
     return b * 1024;

@@ -89,11 +89,22 @@ namespace klib
     using false_type = integral_constant<bool, false>;
     using true_type = integral_constant<bool, true>;
 
-    template<class T, class U>
+    template <class T, class U>
     struct is_same : false_type {};
 
-    template<class T>
+    template <class T>
     struct is_same<T, T> : true_type {};
+
+    template <class>
+    struct is_integral : false_type {};
+    template <> struct is_integral<int8_t>    : true_type {};
+    template <> struct is_integral<int16_t>   : true_type {};
+    template <> struct is_integral<int32_t>   : true_type {};
+    template <> struct is_integral<int64_t>   : true_type {};
+    template <> struct is_integral<uint8_t>   : true_type {};
+    template <> struct is_integral<uint16_t>  : true_type {};
+    template <> struct is_integral<uint32_t>  : true_type {};
+    template <> struct is_integral<uint64_t>  : true_type {};
 }
 
 // explanation: https://en.wikibooks.org/wiki/More_C++_Idioms/Member_Detector

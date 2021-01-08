@@ -102,6 +102,16 @@ namespace klib
             return '\0';
         }
 
+        uint64_t hash() const
+        {
+            int hash = 7;
+            for (size_t i = 0; i < size_; i++) {
+                hash = (hash << 5) - 7 + data_[i];
+            }
+
+            return hash;
+        }
+
         const char *c_str() const
         {
             return data_.get();
