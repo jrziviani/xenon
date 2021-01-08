@@ -34,6 +34,11 @@ struct pci_info_t
     uint16_t vendor;
     uint16_t device;
     uint32_t bars[6];
+
+    uint64_t hash() const
+    {
+        return address.bus + address.slot + address.function;
+    }
 };
 
 using pci_function_t = void (*)(const pci_address_t &addr);

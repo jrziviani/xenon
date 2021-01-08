@@ -1,5 +1,7 @@
 #include <klib/multiboot.h>
 #include <klib/logger.h>
+#include <klib/cmemory.h>
+#include <klib/map.h>
 #include <memory/manager.h>
 #include <proc/process_controller.h>
 #include <proc/scheduler.h>
@@ -7,45 +9,44 @@
 #include <drivers/irq_handler.h>
 #include <drivers/bus/pci.h>
 #include <drivers/controller/ahci.h>
+#include <drivers/device_interface.h>
 
 #include "arch_factory.h"
 #include "config.h"
-
-using namespace klib;
 
 void kmain(multiboot_info_t *bootinfo, unsigned long magic)
 {
     auto &arch = arch_factory::instance();
 
-    logger::instance().log("Booting XenonOS\n");
+    klib::logger::instance().log("Booting XenonOS\n");
 
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
-        logger::instance().log("Invalid magic number 0x%x", magic);
+        klib::logger::instance().log("Invalid magic number 0x%x", magic);
         return;
     }
 
     if (bootinfo->flags & MULTIBOOT_INFO_CMDLINE) {
         uintptr_t cmdline = bootinfo->cmdline + KVIRTUAL_ADDRESS;
-        logger::instance().log("[multiboot] cmdline: %s",
+        klib::logger::instance().log("[multiboot] cmdline: %s",
                                reinterpret_cast<char*>(cmdline));
     }
 
-    logger::instance().log("Initializing IDT");
+    klib::logger::instance().log("Initializing IDT");
     arch->init_interrupts();
 
-    logger::instance().log("Mapping kernel pages");
+    klib::logger::instance().log("Mapping kernel pages");
     arch->init_paging();
 
-    logger::instance().log("Initializing memory manager");
+    klib::logger::instance().log("Initializing memory manager");
     manager::instance().initialize(bootinfo, arch->get_paging());
 
-    logger::instance().log("Initializing processes");
+    klib::logger::instance().log("Initializing processes");
     arch->init_processes();
 
-    logger::instance().log("Initializing timers");
+    klib::logger::instance().log("Initializing timers");
     arch->init_timer();
 
-    logger::instance().log("Initializing scheduler");
+    klib::logger::instance().log("Initializing scheduler");
     irq_handler irqs;
     arch->assign_irq(&irqs);
     //scheduler simple_scheduler(*arch->get_process_controller());
@@ -59,15 +60,18 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     p->create_dummy_processes();
     */
 
-    logger::instance().log("Initializing PCI");
+    klib::logger::instance().log("Initializing PCI");
     arch->init_pci();
     pci *devices = arch->get_pci();
 
     devices->scan_hw();
 
-    //llist<device_interface*>
+    klib::map<pci_info_t, klib::unique_ptr<device_interface>> device_map;
     for (const auto device : *devices) {
-        ahci::detect(device);
+        auto dev = ahci::detect(device);
+        if (dev) {
+            device_map.insert(device, klib::move(dev));
+        }
     }
 
     while (true) {

@@ -37,6 +37,16 @@ namespace klib
         D deleter_;
 
     public:
+        constexpr unique_ptr() noexcept :
+            data_(nullptr)
+        {
+        }
+
+        constexpr unique_ptr(nullptr_t) noexcept :
+            data_(nullptr)
+        {
+        }
+
         explicit unique_ptr(T *data) :
             data_(data)
         {
@@ -49,13 +59,8 @@ namespace klib
         {
         }
 
-        unique_ptr() noexcept :
-            data_(nullptr)
-        {
-        }
-
         unique_ptr(unique_ptr &&that) noexcept :
-            data_(move(that.data))
+            data_(move(that.data_))
         {
         }
 
@@ -63,6 +68,12 @@ namespace klib
         {
             reset(that.release());
             deleter_ = forward<D>(that.deleter_);
+            return *this;
+        }
+
+        unique_ptr &operator=(nullptr_t) noexcept
+        {
+            reset();
             return *this;
         }
 
@@ -130,6 +141,16 @@ namespace klib
         D deleter_;
 
     public:
+        constexpr unique_ptr() noexcept :
+            data_(nullptr)
+        {
+        }
+
+        constexpr unique_ptr(nullptr_t) noexcept :
+            data_(nullptr)
+        {
+        }
+
         explicit unique_ptr(T *data) :
             data_(data)
         {
@@ -142,11 +163,6 @@ namespace klib
         {
         }
 
-        unique_ptr() noexcept :
-            data_(nullptr)
-        {
-        }
-
         unique_ptr(unique_ptr &&that) noexcept :
             data_(move(that.data_))
         {
@@ -156,6 +172,12 @@ namespace klib
         {
             reset(that.release());
             deleter_ = forward<D>(that.deleter_);
+            return *this;
+        }
+
+        unique_ptr &operator=(nullptr_t) noexcept
+        {
+            reset();
             return *this;
         }
 

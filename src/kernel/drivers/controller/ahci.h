@@ -48,7 +48,7 @@
 
 namespace ahci
 {
-    void detect(pci_info_t info);
+    klib::unique_ptr<device_interface> detect(pci_info_t info);
 
     class ahci_controller : public device_interface
     {
