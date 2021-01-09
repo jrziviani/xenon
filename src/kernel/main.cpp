@@ -10,6 +10,7 @@
 #include <drivers/bus/pci.h>
 #include <drivers/controller/ahci.h>
 #include <drivers/device_interface.h>
+#include <filesystems/ext2/ext2.h>
 
 #include "arch_factory.h"
 #include "config.h"
@@ -63,16 +64,17 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
     klib::logger::instance().log("Initializing PCI");
     arch->init_pci();
     pci *devices = arch->get_pci();
-
     devices->scan_hw();
 
-    klib::map<pci_info_t, klib::unique_ptr<device_interface>> device_map;
+    //klib::map<pci_info_t, klib::unique_ptr<device_interface>> device_map;
     for (const auto device : *devices) {
         auto dev = ahci::detect(device);
         if (dev) {
-            device_map.insert(device, klib::move(dev));
+            //device_map.insert(device, klib::move(dev));
+            ext2 fs(dev.get());
         }
     }
+
 
     while (true) {
         arch->cpu_halt();

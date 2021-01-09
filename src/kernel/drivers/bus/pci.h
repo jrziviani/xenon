@@ -39,6 +39,13 @@ struct pci_info_t
     {
         return address.bus + address.slot + address.function;
     }
+
+    bool operator==(const pci_info_t &info)
+    {
+        return address.bus == info.address.bus &&
+               address.slot == info.address.slot &&
+               address.function == info.address.function;
+    }
 };
 
 using pci_function_t = void (*)(const pci_address_t &addr);

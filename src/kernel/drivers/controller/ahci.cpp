@@ -91,15 +91,7 @@ klib::unique_ptr<device_interface> ahci::detect(pci_info_t info)
     // PCI BAR[5] points to ABAR base address, maps the address in the virtual address space and
     // bind that location to a hba_memory structure
     auto abar = reinterpret_cast<ahci::hba_memory*>(manager::instance().mapio(info.bars[5], 0, 0));
-
-    return klib::make_unique<device_interface>(ahci::ahci_controller(abar));
-
-    //auto superblk = new ext2::superblock;
-
-    // superblock is located at byte 1024 from the beginning of the volume and is exactly
-    // 1024 bytes length. If disk uses 512-byte sectors, superblock begins at LBA 2 and
-    // occupies sectors 2 and 3
-    // controller->sata_read(2, 0, 24, reinterpret_cast<uintptr_t>(superblk) - KVIRTUAL_ADDRESS);
+    return klib::unique_ptr<device_interface>(new ahci::ahci_controller(abar));
 }
 
 ahci::ahci_controller::ahci_controller(hba_memory *abar) :
