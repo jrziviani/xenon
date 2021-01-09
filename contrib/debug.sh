@@ -2,8 +2,7 @@
 set -x
 readonly DIR="$1"
 
-[[ ! -f hda.img ]] && qemu-image create hda.img -f raw 128M
-mkfs.ext2 hda.img
+[[ ! -f hda.img ]] && qemu-image create hda.img -f raw 128M && mkfs.ext2 hda.img
 
 qemu-system-x86_64                                                          \
     -m 1G -machine q35,accel=tcg                                            \
