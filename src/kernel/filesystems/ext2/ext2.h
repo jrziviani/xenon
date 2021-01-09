@@ -1,12 +1,17 @@
 #ifndef EXT2_H
 #define EXT2_H
 
+#include <drivers/device_interface.h>
+
 class ext2
 {
+    device_interface *device_;
+
 private:
     void create_block();
 
 public:
+    ext2(device_interface *device);
     void probe();
     bool mount();
 };

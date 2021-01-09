@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace ext2
+namespace ext2fs
 {
     struct inode
     {

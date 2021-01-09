@@ -5,6 +5,7 @@ add_subdirectory(arch)
 add_subdirectory(memory)
 add_subdirectory(proc)
 add_subdirectory(drivers)
+add_subdirectory(filesystems)
 
 set(MAX_PAGE_SIZE 0x1000)
 set(LINKER_SCRIPT "kernel.ld")
@@ -23,6 +24,7 @@ target_link_libraries(kernel LINK_PUBLIC
                       proc.o
                       memory.o
                       drivers.o
+                      filesystems.o
                       appendix.o)
 
 add_custom_command(TARGET kernel PRE_LINK
