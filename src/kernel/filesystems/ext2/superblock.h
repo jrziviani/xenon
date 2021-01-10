@@ -5,6 +5,28 @@
 
 namespace ext2fs
 {
+    struct superblock_ext
+    {
+        uint32_t first_inode;
+        uint16_t inode_size;
+        uint16_t superblock_id;
+        uint32_t optional_features;
+        uint32_t required_features;
+        uint32_t readonly_features;
+        uint64_t filesystem_id[2];
+        char     volume_name[16];
+        char     last_mount_path[64];
+        uint32_t compression_algorithm;
+        uint8_t  file_preallocated_blocks;
+        uint8_t  dir_preallocated_blocks;
+        uint16_t unused1;
+        uint64_t journal_id[2];
+        uint32_t journal_inode;
+        uint32_t journal_device;
+        uint32_t orphan_list;
+        uint8_t  unused2[788];               // padding to 1024
+    } __attribute__((packed));
+
     struct superblock
     {
         uint32_t inodes_total;
@@ -32,32 +54,8 @@ namespace ext2fs
         uint32_t major_version;
         uint16_t uid_reserved_blocks;
         uint16_t gid_reserved_blocks;
-
-        void read();
-        void write();
-    };
-
-    struct superblock_ext
-    {
-        uint32_t first_inode;
-        uint16_t inode_size;
-        uint16_t superblock_id;
-        uint32_t optional_features;
-        uint32_t required_features;
-        uint32_t readonly_features;
-        uint64_t filesystem_id[2];
-        char     volume_name[16];
-        char     last_mount_path[64];
-        uint32_t compression_algorithm;
-        uint8_t  file_preallocated_blocks;
-        uint8_t  dir_preallocated_blocks;
-        uint16_t unused1;
-        uint64_t journal_id[2];
-        uint32_t journal_inode;
-        uint32_t journal_device;
-        uint32_t orphan_list;
-        uint8_t  unused2[788];               // padding to 1024
-    };
+        superblock_ext extended;
+    } __attribute__((packed));
 
     struct block_group_descriptor
     {

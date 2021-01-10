@@ -37,6 +37,9 @@ namespace klib
         D deleter_;
 
     public:
+        using element_type = T;
+
+    public:
         constexpr unique_ptr() noexcept :
             data_(nullptr)
         {

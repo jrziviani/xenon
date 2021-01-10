@@ -18,7 +18,8 @@ namespace klib
     template <typename K, typename V>
     class map
     {
-        list<keyvalue_t<K, V>> values_[BUCKETS];
+        //list<keyvalue_t<K, V>> values_[BUCKETS];
+        keyvalue_t<K, V> values_[BUCKETS];
 
     private:
         uint64_t hash(uint64_t value)
@@ -29,36 +30,41 @@ namespace klib
     public:
         bool has_key(K key)
         {
+            /*
             for (auto item : values_[key.hash()]) {
                 if (key == item.key) {
                     return true;
                 }
             }
+            */
 
             return false;
         }
 
         void insert(K key, V value)
         {
-            (void)key;
-            (void)value;
-            //values_[key.hash()].push_back(keyvalue_t{key, move(value)});
+            values_[key.hash() % BUCKETS] = keyvalue_t{key, move(value)};
         }
 
         void remove(K key)
         {
-            values_[key.hash()].remove(key);
+            //values_[key.hash()].remove(key);
         }
 
-        optional<V> at(K key) const
+        auto at(K key) const
         {
+            return values_[key.hash() % BUCKETS].value.get();
+            /*
+            decltype(
             for (auto item : values_[key.hash()]) {
                 if (key == item.key) {
+                    //if constexpr (is_same<class T, class U>
                     return item.value;
                 }
             }
 
             return optional<V>();
+            */
         }
     };
 }

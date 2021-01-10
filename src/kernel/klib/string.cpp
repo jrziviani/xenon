@@ -5,9 +5,19 @@ namespace klib
     string::string(const char *str) :
         capacity_(strlen(str)),
         size_(capacity_),
-        data_(make_unique<char[]>(capacity_))
+        data_(make_unique<char[]>(capacity_ + 1))
     {
         memcpy(data_.get(), str, size_);
+        data_[size_] = '\0';
+    }
+
+    string::string(const char *str, size_t size) :
+        capacity_(size),
+        size_(size),
+        data_(make_unique<char[]>(size_ + 1))
+    {
+        memcpy(data_.get(), str, size);
+        data_[size_] = '\0';
     }
 
     string::string(size_t capacity) :

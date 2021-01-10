@@ -46,8 +46,8 @@ add_custom_command(TARGET kernel POST_BUILD
 
 add_custom_target(qemu
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                  COMMAND qemu-img create hda.img -f raw 128M
-                  COMMAND mkfs.ext2 hda.img
+                  #COMMAND qemu-img create hda.img -f raw 128M
+                  #COMMAND mkfs.ext2 hda.img
                   COMMAND qemu-system-x86_64
                       -m 1G
                       -machine q35,accel=tcg

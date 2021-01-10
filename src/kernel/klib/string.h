@@ -78,6 +78,7 @@ namespace klib
 
     public:
         string(const char *str);
+        string(const char *str, size_t size);
         string(size_t capacity);
         string(const string &that);
         string(string &&that);

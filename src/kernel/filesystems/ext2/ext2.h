@@ -8,6 +8,7 @@ class ext2
     device_interface *device_;
 
 private:
+    void read_block();
     void create_block();
 
 public:

@@ -2,5 +2,5 @@ target remote :1234
 layout next
 layout next
 layout next
-focus next
+focus cmd
 b remap

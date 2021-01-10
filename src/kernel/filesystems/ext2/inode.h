@@ -42,10 +42,7 @@ namespace ext2fs
         uint16_t size;           // total size of this entry (including subfields)
         uint8_t  name_len;       // least-significant 8 bits
         uint8_t  type_indicator; // basically most-significant name len
-        char*    name;           // directory name
-
-        void read();
-        void list();
+        char     name;           // directory name
     };
 
     enum class TYPES : uint16_t

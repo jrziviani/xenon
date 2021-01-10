@@ -22,7 +22,7 @@ namespace klib
             }
 
             node(T data) :
-                data_(data),
+                data_(move(data)),
                 next_(nullptr),
                 previous_(nullptr)
             {
@@ -113,11 +113,11 @@ namespace klib
         void push_back(T data)
         {
             if (tail_ == nullptr) {
-                tail_ = allocator_.template create<node>(data);
+                tail_ = allocator_.template create<node>(move(data));
                 head_ = tail_;
             }
             else {
-                tail_->next_ = allocator_.template create<node>(data);
+                tail_->next_ = allocator_.template create<node>(move(data));
                 tail_ = tail_->next_;
             }
 
@@ -126,7 +126,7 @@ namespace klib
 
         void push_front(T data)
         {
-            node *n = allocator_.template create<node>(data);
+            node *n = allocator_.template create<node>(move(data));
             n->next_ = head_;
             head_ = n;
 

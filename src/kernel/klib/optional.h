@@ -21,6 +21,11 @@ namespace klib
         {
         }
 
+        T data()
+        {
+            return data_;
+        }
+
         /*
         explicit operator bool()
         {

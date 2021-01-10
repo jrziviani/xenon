@@ -32,22 +32,22 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
                                reinterpret_cast<char*>(cmdline));
     }
 
-    klib::logger::instance().log("Initializing IDT");
+    //klib::logger::instance().log("Initializing IDT");
     arch->init_interrupts();
 
-    klib::logger::instance().log("Mapping kernel pages");
+    //klib::logger::instance().log("Mapping kernel pages");
     arch->init_paging();
 
-    klib::logger::instance().log("Initializing memory manager");
+    //klib::logger::instance().log("Initializing memory manager");
     manager::instance().initialize(bootinfo, arch->get_paging());
 
-    klib::logger::instance().log("Initializing processes");
+    //klib::logger::instance().log("Initializing processes");
     arch->init_processes();
 
-    klib::logger::instance().log("Initializing timers");
+    //klib::logger::instance().log("Initializing timers");
     arch->init_timer();
 
-    klib::logger::instance().log("Initializing scheduler");
+    //klib::logger::instance().log("Initializing scheduler");
     irq_handler irqs;
     arch->assign_irq(&irqs);
     //scheduler simple_scheduler(*arch->get_process_controller());
