@@ -5,6 +5,9 @@ Intro
 -----
 XenonOS is a hobbyist kernel project started during the quarantine. It's being written in C++17.
 
+![screenshot](pics/screen.png)
+(identifying a AHCI SATA disk + listing ext2 dirs)
+
 Build
 -----
 The first build will download and compile binutils and gcc to cross-compile the project.
