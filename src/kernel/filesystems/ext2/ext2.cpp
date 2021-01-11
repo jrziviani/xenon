@@ -10,21 +10,6 @@
 
 constexpr uint16_t EXT2_SIGNATURE = 0xef53;
 
-inline auto block_group_from_inode(uint32_t inode, ext2fs::superblock *superblk)
-{
-    return (inode - 1) / superblk->inodes_per_group;
-}
-
-inline auto block_from_inode(uint32_t inode, ext2fs::superblock *superblk)
-{
-    return (inode * superblk->inodes_total) / superblk->block_size;
-}
-
-inline auto inode_index(uint32_t inode, ext2fs::superblock *superblk)
-{
-    return (inode - 1) % superblk->inodes_per_group;
-}
-
 ext2::ext2(device_interface *device) :
     device_(device)
 {
@@ -45,7 +30,7 @@ ext2::ext2(device_interface *device) :
     // superblock is located at byte 1024 from the beginning of the volume and is exactly
     // 1024 bytes length. If disk uses 512-byte sectors, superblock begins at LBA 2 and
     // occupies sectors 2 and 3
-     controller_hack->sata_read(2, 0, 32, reinterpret_cast<uintptr_t>(superblk) - KVIRTUAL_ADDRESS);
+     controller_hack->sata_read(2, 32, reinterpret_cast<uintptr_t>(superblk) - KVIRTUAL_ADDRESS);
 
     // make sure the device has a ext2 filesystem
     if (superblk->signature != EXT2_SIGNATURE) {
@@ -80,7 +65,6 @@ ext2::ext2(device_interface *device) :
      auto inode_index = (2 - 1) % superblk->inodes_per_group;
      auto start_lba = (block_size == 1_KB) ? 4 : 3;
      controller_hack->sata_read(start_lba + block_index,
-                                0,
                                 sectors_per_block,
                                 reinterpret_cast<uintptr_t>(block_descriptor) - KVIRTUAL_ADDRESS);
      // set the block_descriptor to the required index
@@ -91,7 +75,6 @@ ext2::ext2(device_interface *device) :
      auto block = (inode_index * sizeof(ext2fs::inode)) / block_size;
      auto inode = new ext2fs::inode;
      controller_hack->sata_read(block_descriptor->inode_table_address * sectors_per_block,
-                                0,
                                 512,
                                 reinterpret_cast<uintptr_t>(inode) - KVIRTUAL_ADDRESS);
      inode += inode_index;
@@ -107,7 +90,6 @@ ext2::ext2(device_interface *device) :
         klib::unique_ptr<char[]> buffer = klib::make_unique<char[]>(static_cast<size_t>(1_KB));
         auto dir = reinterpret_cast<ext2fs::directory_entry*>(buffer.get());
         controller_hack->sata_read(b * sectors_per_block,
-                                   0,
                                    1,
                                    reinterpret_cast<uintptr_t>(buffer.get()) - KVIRTUAL_ADDRESS);
 

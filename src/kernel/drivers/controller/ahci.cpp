@@ -81,6 +81,23 @@ void convert_ahci_string(char *str, int len)
     str[i - 1] = '\0';
 }
 
+void SATA48_command(ahci::hba_to_device *to_dev, uint8_t command, uint64_t lba, uint8_t sector_count)
+{
+    to_dev->command = command;
+    to_dev->device = 0x40; // LBA mode
+    to_dev->lba_sector = static_cast<uint8_t>(lba);
+    to_dev->lba_cylinder_lo = static_cast<uint8_t>((lba >> 8) & 0xff);
+    to_dev->lba_cylinder_hi = static_cast<uint8_t>((lba >> 16) & 0xff);
+    to_dev->lba_sector_exp = static_cast<uint8_t>((lba >> 24) & 0xff);
+    to_dev->lba_cylinder_lo_exp = static_cast<uint8_t>((lba >> 32) & 0xff);
+    to_dev->lba_cylinder_hi_exp = static_cast<uint8_t>((lba >> 40) & 0xff);
+    to_dev->count_lo = sector_count & 0xff;
+    to_dev->count_hi = (sector_count >> 8) & 0xff;
+
+    to_dev->fis_type = static_cast<uint8_t>(ahci::FIS_TYPES::FIS_TYPE_REG_H2D);
+    to_dev->cmd_control = 1;
+}
+
 klib::unique_ptr<device_interface> ahci::detect(pci_info_t info)
 {
     // not an ahci controller, return
@@ -348,9 +365,14 @@ void ahci::ahci_controller::sata_identify()
 }
 
 void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
-                                         uint64_t start_lo, uint64_t start_hi,
-                                         uint64_t count, uintptr_t buffer)
+                                         uint64_t lba, uint64_t sector_count,
+                                         uintptr_t buffer)
 {
+    if ((buffer & 0x1) == 1) {
+        klib::logger::instance().log("buffer address must be aligned");
+        return;
+    }
+
     // Basic Stpes when Building a Command - page 70 - $5.5.1
     // 5. Set PxCI.CI(pFreeSlot) to indicate HBA that command is active.
     auto slot = find_cmdslot(port, total_cmd_slots_);
@@ -371,38 +393,29 @@ void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
     //    P(refetch) optional
     cmd_list->prefetchable = 1;
     //    PRDTL containing the number of entries in PRD table
-    cmd_list->prdt_length = ((count - 1) >> 4) + 1;
+    //    count (sectors) / 16-byte per ATAPI command
+    cmd_list->prdt_length = ((sector_count - 1) >> 4) + 1;
 
+    // Interrupt on Completion is the way to implement  a non-block read/write
     auto cmd_table = reinterpret_cast<command_table*>((
                 static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 |
                 cmd_list->command_table_base_addr_lo) + KVIRTUAL_ADDRESS);
     uint16_t i = 0;
-    for (; i < cmd_list->prdt_length - 1; i++ ) {
+    for (; i < cmd_list->prdt_length - 1; i++) {
         cmd_table->descriptor_entry[i].data_base_address_lo = buffer & 0xffff'ffff;
         cmd_table->descriptor_entry[i].data_base_address_hi = buffer << 32;
         cmd_table->descriptor_entry[i].data_byte_count = 8_KB - 1;
         cmd_table->descriptor_entry[i].interrupt_on_completition = 1;
         buffer += 4_KB;
-        count -= 16;
+        sector_count -= 16;
     }
     cmd_table->descriptor_entry[i].data_base_address_lo = buffer & 0xffff'ffff;
     cmd_table->descriptor_entry[i].data_base_address_hi = buffer << 32;
-    cmd_table->descriptor_entry[i].data_byte_count = (count << 9) - 1;
+    cmd_table->descriptor_entry[i].data_byte_count = (sector_count << 9) - 1;
     cmd_table->descriptor_entry[i].interrupt_on_completition = 1;
 
     hba_to_device *to_dev = reinterpret_cast<hba_to_device*>(&cmd_table->command_cfis);
-    to_dev->fis_type = static_cast<uint8_t>(ahci::FIS_TYPES::FIS_TYPE_REG_H2D);
-    to_dev->cmd_control = 1;
-    to_dev->command = command;
-    to_dev->device = 1 << 6; // LBA mode
-    to_dev->lba_sector = static_cast<uint8_t>(start_lo);
-    to_dev->lba_cylinder_lo = static_cast<uint8_t>(start_lo >> 8);
-    to_dev->lba_cylinder_hi = static_cast<uint8_t>(start_lo >> 16);
-    to_dev->lba_sector_exp = static_cast<uint8_t>(start_lo >> 24);
-    to_dev->lba_cylinder_lo_exp = static_cast<uint8_t>(start_hi);
-    to_dev->lba_cylinder_hi_exp = static_cast<uint8_t>(start_hi >> 8);
-    to_dev->count_lo = count & 0xff;
-    to_dev->count_hi = (count >> 8) & 0xff;
+    SATA48_command(to_dev, command, lba, sector_count);
 
     port->command_issue = 1 << slot;
 
@@ -489,7 +502,7 @@ void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
     // https://github.com/haiku/haiku/blob/7f8f4c9c8c1d951b3fa1ad1b7315cf900c6b5fd6/src/add-ons/kernel/busses/scsi/ahci/ahci_port.cpp
 }
 
-void ahci::ahci_controller::sata_read(uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer)
+void ahci::ahci_controller::sata_read(uint64_t lba, uint64_t sector_count, uintptr_t buffer)
 {
     auto port = sata_get_port();
     if (port == nullptr) {
@@ -498,10 +511,10 @@ void ahci::ahci_controller::sata_read(uint64_t start_lo, uint64_t start_hi, uint
     }
 
     // 0x25 - Read DMA Ext
-    sata_execute(port, 0x25, start_lo, start_hi, count, buffer);
+    sata_execute(port, 0x25, lba, sector_count, buffer);
 }
 
-void ahci::ahci_controller::sata_write(uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer)
+void ahci::ahci_controller::sata_write(uint64_t lba, uint64_t sector_count, uintptr_t buffer)
 {
     auto port = sata_get_port();
     if (port == nullptr) {
@@ -510,7 +523,7 @@ void ahci::ahci_controller::sata_write(uint64_t start_lo, uint64_t start_hi, uin
     }
 
     // 0x35 - Write DMA Ext
-    sata_execute(port, 0x35, start_lo, start_hi, count, buffer);
+    sata_execute(port, 0x35, lba, sector_count, buffer);
 }
 
 bool ahci::ahci_controller::wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time)

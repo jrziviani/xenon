@@ -59,8 +59,8 @@ namespace ahci
 
     public:
         ahci_controller(hba_memory *abar);
-        void sata_read(uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer);
-        void sata_write(uint64_t start_lo, uint64_t start_hi, uint64_t count, uintptr_t buffer);
+        void sata_read(uint64_t lba, uint64_t sector_count, uintptr_t buffer);
+        void sata_write(uint64_t lba, uint64_t sector_count, uintptr_t buffer);
 
     private:
         void initialize();
@@ -70,8 +70,8 @@ namespace ahci
         auto sata_get_port();
         void sata_identify();
         void sata_execute(hba_port *port, uint16_t command,
-                          uint64_t start_lo, uint64_t start_hi,
-                          uint64_t count, uintptr_t buffer);
+                          uint64_t lba, uint64_t sector_count,
+                          uintptr_t buffer);
         bool wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time);
     };
 
