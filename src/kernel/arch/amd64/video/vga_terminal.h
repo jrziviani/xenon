@@ -23,14 +23,16 @@ enum colors
     WHITE
 };
 
-const size_t WIDTH = 80;
-const size_t HEIGHT = 25;
+constexpr size_t WIDTH = 80;
+constexpr size_t HEIGHT = 25;
 
 class vga_terminal
 {
     colors current_color_;
     uint8_t col_;
     uint8_t lin_;
+
+    int16_t buffer_[WIDTH * (HEIGHT * 2)];
 
 private:
     void scroll_down();

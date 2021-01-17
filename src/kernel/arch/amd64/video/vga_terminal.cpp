@@ -14,6 +14,18 @@ vga_terminal::vga_terminal() :
 
 void vga_terminal::scroll_down()
 {
+    auto videobuf = reinterpret_cast<uint16_t*>(VGA_VIRTUAL_ADDRESS);
+    for (size_t y = 1; y < HEIGHT; y++) {
+        for (size_t x = 0; x < WIDTH; x++) {
+            videobuf[(y - 1) * WIDTH + x] = videobuf[y * WIDTH + x];
+        }
+    }
+
+    for (size_t x = 0; x < WIDTH; x++) {
+        videobuf[(HEIGHT - 1) * WIDTH + x] = ' ' | 1 << 8;
+    }
+
+    lin_ = HEIGHT - 1;
 }
 
 void vga_terminal::set_color(colors color)
@@ -43,14 +55,20 @@ void vga_terminal::printc(char c)
     if (c == '\n' || c == '\r') {
         col_ = 0;
         lin_++;
+        if (lin_ >= HEIGHT) {
+            scroll_down();
+        }
         return;
     }
 
     videobuf[lin_ * WIDTH + col_] = c | current_color_ << 8;
     col_++;
-    if (col_ > WIDTH) {
+    if (col_ >= WIDTH) {
         col_ = 0;
         lin_++;
+        if (lin_ >= HEIGHT) {
+            scroll_down();
+        }
     }
 }
 
@@ -70,18 +88,18 @@ void vga_terminal::prints(const char *s, char fill, unsigned int times)
             case '\n':
                 lin_++;
                 col_ = 0;
-                if (lin_ > HEIGHT) {
-                    clear();
+                if (lin_ >= HEIGHT) {
+                    scroll_down();
                 }
                 break;
 
             case '\t':
                 col_ += 4 - (col_ % 4);
-                if (col_ > WIDTH) {
+                if (col_ >= WIDTH) {
                     lin_++;
                     col_ = 0;
                     if (lin_ > HEIGHT) {
-                        clear();
+                        scroll_down();
                     }
                 }
                 break;
