@@ -20,6 +20,12 @@ namespace klib
             swap(a[i], b[i]);
         }
     }
+
+    template <typename T>
+    T min(const T &a, const T &b) noexcept
+    {
+        return (a < b) ? a : b;
+    }
 }
 
 #endif // UTILITY_H

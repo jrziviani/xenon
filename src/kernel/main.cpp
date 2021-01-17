@@ -71,10 +71,9 @@ void kmain(multiboot_info_t *bootinfo, unsigned long magic)
         auto dev = ahci::detect(device);
         if (dev) {
             //device_map.insert(device, klib::move(dev));
-            ext2 fs(dev.get());
+            ext2 fs(*dev.get());
         }
     }
-
 
     while (true) {
         arch->cpu_halt();

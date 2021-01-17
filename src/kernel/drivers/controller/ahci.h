@@ -6,7 +6,6 @@
 #include <klib/stdint.h>
 #include <klib/list.h>
 #include <klib/cmemory.h>
-#include <drivers/device_interface.h>
 #include <drivers/bus/pci.h>
 #include <drivers/block_device.h>
 
@@ -48,9 +47,41 @@
 
 namespace ahci
 {
-    klib::unique_ptr<device_interface> detect(pci_info_t info);
+    klib::unique_ptr<block_device> detect(pci_info_t info);
 
-    class ahci_controller : public device_interface
+    enum class IPM : uint8_t
+    {
+        ACTIVE_STATE = 1,
+    };
+
+    enum class DET : uint8_t
+    {
+        GENERATION_3_RATE = 3,
+    };
+
+    enum class SIG : uint64_t
+    {
+        SATA            = 0x101,
+        SATAPI          = 0xEB140101,
+        ENCLOSURE       = 0xC33C0101,
+        PORT_MULTIPLIER = 0x96690101,
+        ERROR           = 0,
+    };
+
+    enum PORT
+    {
+        CMD_ST  = 1,
+        CMD_FRE = 1 << 4,
+        CMD_FR  = 1 << 14,
+        CMD_CR  = 1 << 15,
+    };
+
+    enum GHC
+    {
+        AE = 1 << 31,
+    };
+
+    class ahci_controller : public block_device
     {
         hba_memory *abar_;
         uint32_t total_cmd_slots_;
@@ -59,8 +90,7 @@ namespace ahci
 
     public:
         ahci_controller(hba_memory *abar);
-        void sata_read(uint64_t lba, uint64_t sector_count, uintptr_t buffer);
-        void sata_write(uint64_t lba, uint64_t sector_count, uintptr_t buffer);
+        klib::unique_ptr<char[]> read(size_t offset, size_t blocks) override final;
 
     private:
         void initialize();
@@ -69,9 +99,9 @@ namespace ahci
         void stop(hba_port *port);
         auto sata_get_port();
         void sata_identify();
-        void sata_execute(hba_port *port, uint16_t command,
-                          uint64_t lba, uint64_t sector_count,
-                          uintptr_t buffer);
+        void sata_execute(hba_port *port, uint16_t command, size_t lba, uintptr_t buffer, size_t buffer_size);
+        void sata_read(size_t lba, uintptr_t buffer, size_t buffer_size);
+        void sata_write(size_t lba, uintptr_t buffer, size_t buffer_size);
         bool wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time);
     };
 

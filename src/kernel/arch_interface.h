@@ -9,7 +9,6 @@
 #include <drivers/keyboard.h>
 #include <drivers/irq_handler.h>
 #include <drivers/bus/pci.h>
-#include <drivers/ide.h>
 
 #include <klib/new.h>
 #include <klib/xenon_base.h>
@@ -81,7 +80,6 @@ public:
     virtual void assign_irq(irq_handler*)   = 0;
 
     virtual keyboard *create_keyboard()     = 0;
-    virtual ide *create_ide()               = 0;
 
     virtual void cpu_halt()                 = 0;
 };

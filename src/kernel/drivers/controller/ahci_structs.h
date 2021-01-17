@@ -7,6 +7,7 @@ namespace ahci
 {
     constexpr size_t COMMAND_LIST_ENTRY_COUNT = 32;
     constexpr size_t PRD_TABLE_ENTRY_COUNT = 128;
+    constexpr size_t PRD_MAX_DATA_LENGTH = 4_MB;
 
     struct hba_port
     {

@@ -7,50 +7,22 @@
 
 #include <arch_factory.h>
 
-enum class IPM : uint8_t
-{
-    ACTIVE_STATE = 1,
-};
 
-enum class DET : uint8_t
-{
-    GENERATION_3_RATE = 3,
-};
-
-enum class SIG : uint64_t
-{
-    SATA            = 0x101,
-    SATAPI          = 0xEB140101,
-    ENCLOSURE       = 0xC33C0101,
-    PORT_MULTIPLIER = 0x96690101,
-    ERROR           = 0,
-};
-
-enum PORT
-{
-    CMD_ST  = 1,
-    CMD_FRE = 1 << 4,
-    CMD_FR  = 1 << 14,
-    CMD_CR  = 1 << 15,
-};
-
-enum GHC
-{
-    AE = 1 << 31,
-};
-
-SIG check_type(ahci::hba_port *port)
+/******************************************************************************
+ * Helper functions
+ *****************************************************************************/
+ahci::SIG check_type(ahci::hba_port *port)
 {
     // get data about device dection and power management
     auto sata_status = port->sata_status;
-    auto power_mng = static_cast<IPM>((sata_status >> 8) & 0xf);
-    auto detection = static_cast<DET>(sata_status & 0xf);
-    auto signature = static_cast<SIG>(port->signature);
+    auto power_mng = static_cast<ahci::IPM>((sata_status >> 8) & 0xf);
+    auto detection = static_cast<ahci::DET>(sata_status & 0xf);
+    auto signature = static_cast<ahci::SIG>(port->signature);
 
     // check if device active and generation 3 communication rate was
     // negotiated.
-    if (detection != DET::GENERATION_3_RATE || power_mng != IPM::ACTIVE_STATE) {
-        return SIG::ERROR;
+    if (detection != ahci::DET::GENERATION_3_RATE || power_mng != ahci::IPM::ACTIVE_STATE) {
+        return ahci::SIG::ERROR;
     }
 
     return signature;
@@ -81,8 +53,10 @@ void convert_ahci_string(char *str, int len)
     str[i - 1] = '\0';
 }
 
-void SATA48_command(ahci::hba_to_device *to_dev, uint8_t command, uint64_t lba, uint8_t sector_count)
+void LBA48_command(ahci::hba_to_device *to_dev, uint8_t command, uint64_t lba, uint8_t sector_count)
 {
+    // LBA48: https://en.wikipedia.org/wiki/Logical_block_addressing#LBA48
+    //    Named 48 because the addressing limit is 2^48 * 512 (128PiB).
     to_dev->command = command;
     to_dev->device = 0x40; // LBA mode
     to_dev->lba_sector = static_cast<uint8_t>(lba);
@@ -98,7 +72,7 @@ void SATA48_command(ahci::hba_to_device *to_dev, uint8_t command, uint64_t lba, 
     to_dev->cmd_control = 1;
 }
 
-klib::unique_ptr<device_interface> ahci::detect(pci_info_t info)
+klib::unique_ptr<block_device> ahci::detect(pci_info_t info)
 {
     // not an ahci controller, return
     if (info.klass != 0x1 || info.subclass != 0x6) {
@@ -108,14 +82,50 @@ klib::unique_ptr<device_interface> ahci::detect(pci_info_t info)
     // PCI BAR[5] points to ABAR base address, maps the address in the virtual address space and
     // bind that location to a hba_memory structure
     auto abar = reinterpret_cast<ahci::hba_memory*>(manager::instance().mapio(info.bars[5], 0, 0));
-    return klib::unique_ptr<device_interface>(new ahci::ahci_controller(abar));
+    return klib::unique_ptr<block_device>(new ahci::ahci_controller(abar));
 }
 
+
+/******************************************************************************
+ * Class implementation
+ *****************************************************************************/
 ahci::ahci_controller::ahci_controller(hba_memory *abar) :
+    block_device(0),
     abar_(abar)
 {
     initialize();
     sata_identify();
+}
+
+klib::unique_ptr<char[]> ahci::ahci_controller::read(size_t lba, size_t bytes)
+{
+    // Information: https://en.wikipedia.org/wiki/Logical_block_addressing
+    //
+    // Intro:
+    //   We're using LBA addressing here, which is a linear way to access disk data where each
+    //   number describes a single block. It's also possible to use CHS geometry but I think
+    //   it's obsolete.
+    //
+    // Conversion formulas (curiosity only):
+    //   LBA      = (Cylinders x Heads/Cylinder + Heads) * Sectors/Track  + (Sectors - 1)
+    //   Cylinder = LBA / (Heads/Cylinder * Sectors/Track)
+    //   Head     = (LBA / Sectors/Track) % Heads/Cylinder
+    //   Sector   = (LBA % Sectors/Track) + 1
+
+    // sanity check, don't read an not initialized device
+    if (sector_size_ == 0) {
+        klib::logger::instance().log("sector size == 0, device is not initialized");
+        return nullptr;
+    }
+
+    // create a buffer large enough to store the result
+    auto buffer = klib::make_unique<char[]>(bytes);
+
+    // read all required blocks
+    sata_read(lba, reinterpret_cast<uintptr_t>(buffer.get()) - KVIRTUAL_ADDRESS, bytes);
+
+    // move the buffer to a string container and return it
+    return klib::move(buffer);
 }
 
 void ahci::ahci_controller::initialize()
@@ -161,7 +171,7 @@ void ahci::ahci_controller::initialize()
         //    d. if hba_port.command_status.FIS Receive Enable == 1, SW should
         //       set it to 0 and wait at least 500 miliseconds for
         //       hba_port.command_status.FIS Receive Running to return 0 when read.
-        if ((abar_->ports[i].command_status & PORT::CMD_FRE) == 1) {
+        if ((abar_->ports[i].command_status & PORT::CMD_FRE) != 0) {
             abar_->ports[i].command_status &= ~PORT::CMD_FRE;
             wait_until(abar_->ports[i].command_status, PORT::CMD_CR, false, 500);
         }
@@ -177,6 +187,7 @@ void ahci::ahci_controller::initialize()
         // 5. for each implemented port, allocate memory for and program:
         //    a. hba_port.comm_list_base_addr_[lo|hi]
         //    a.1. zero out the memory allocated
+        //    we're going to allocate COMMAND_LIST_ENTRY_COUNT=32 command lists
         paddr_t physical_command_list;
         paddr_t physical_command_table;
         auto place = placement_kalloc(sizeof(command_list) * COMMAND_LIST_ENTRY_COUNT,
@@ -189,6 +200,7 @@ void ahci::ahci_controller::initialize()
         abar_->ports[i].comm_list_base_addr_lo = ptr_from(physical_command_list) & 0xffff'ffff;
         abar_->ports[i].comm_list_base_addr_hi = ptr_from(physical_command_list) >> 32;
 
+        // now allocate memory for command table and descriptor tables (PRD_TABLE_ENTRY_COUNT=128)
         auto cmd_list = reinterpret_cast<command_list*>(place);
         place = placement_kalloc(sizeof(command_table) + sizeof(descriptor_table) * PRD_TABLE_ENTRY_COUNT,
                                  &physical_command_table, true);
@@ -332,7 +344,7 @@ void ahci::ahci_controller::sata_identify()
     cmd_table->descriptor_entry[0].data_base_address_lo = physical_sata & 0xfff'fffff;
     cmd_table->descriptor_entry[0].data_base_address_hi = physical_sata >> 32;
     cmd_table->descriptor_entry[0].data_byte_count = 511;
-    cmd_table->descriptor_entry[0].interrupt_on_completition = 1;
+    cmd_table->descriptor_entry[0].interrupt_on_completition = 0;
 
     hba_to_device *to_dev = reinterpret_cast<hba_to_device*>(&cmd_table->command_cfis);
     to_dev->fis_type = static_cast<uint8_t>(ahci::FIS_TYPES::FIS_TYPE_REG_H2D);
@@ -361,13 +373,16 @@ void ahci::ahci_controller::sata_identify()
     convert_ahci_string(identifier_.model, sizeof(identifier_.model));
     convert_ahci_string(identifier_.firmware, sizeof(identifier_.firmware));
     convert_ahci_string(identifier_.serial, sizeof(identifier_.serial));
+    sector_size_ = identifier_.sectors;
+
     klib::logger::instance().log("%s, %s, %s", identifier_.model, identifier_.serial, identifier_.firmware);
 }
 
-void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
-                                         uint64_t lba, uint64_t sector_count,
-                                         uintptr_t buffer)
+void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command, size_t lba,
+                                         uintptr_t buffer, size_t buffer_size)
 {
+    static_assert(sizeof(hba_to_device) == 20, "H2D struct must have 20 bytes");
+
     if ((buffer & 0x1) == 1) {
         klib::logger::instance().log("buffer address must be aligned");
         return;
@@ -387,35 +402,38 @@ void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
                 port->comm_list_base_addr_lo) + KVIRTUAL_ADDRESS);
     cmd_list += slot;
     //    CFL set to the length of the command in CFIS area
+    //    HBA uses this field to know the length of the FIS it will send to device
+    //    sizeof(hba_to_device) / sizeof(int32_t) means 5 doublewords.
     cmd_list->command_fis_length = sizeof(hba_to_device) / sizeof(int32_t);
     //    W(rite) bit set if data is going to the device
     cmd_list->write = (command == 0x35) ? 1 : 0;
     //    P(refetch) optional
     cmd_list->prefetchable = 1;
-    //    PRDTL containing the number of entries in PRD table
-    //    count (sectors) / 16-byte per ATAPI command
-    cmd_list->prdt_length = ((sector_count - 1) >> 4) + 1;
 
     // Interrupt on Completion is the way to implement  a non-block read/write
     auto cmd_table = reinterpret_cast<command_table*>((
                 static_cast<uintptr_t>(cmd_list->command_table_base_addr_hi) << 32 |
                 cmd_list->command_table_base_addr_lo) + KVIRTUAL_ADDRESS);
-    uint16_t i = 0;
-    for (; i < cmd_list->prdt_length - 1; i++) {
+
+    size_t sector_count = 0;
+    auto len = klib::min(buffer_size, PRD_MAX_DATA_LENGTH) / cmd_list->prdt_length;
+    for (uint16_t i = 0; i < cmd_list->prdt_length && len <= buffer_size; i++, len += len) {
         cmd_table->descriptor_entry[i].data_base_address_lo = buffer & 0xffff'ffff;
         cmd_table->descriptor_entry[i].data_base_address_hi = buffer << 32;
-        cmd_table->descriptor_entry[i].data_byte_count = 8_KB - 1;
+        cmd_table->descriptor_entry[i].data_byte_count = len;
         cmd_table->descriptor_entry[i].interrupt_on_completition = 1;
-        buffer += 4_KB;
-        sector_count -= 16;
+        buffer += len;
+        sector_count++;
     }
-    cmd_table->descriptor_entry[i].data_base_address_lo = buffer & 0xffff'ffff;
-    cmd_table->descriptor_entry[i].data_base_address_hi = buffer << 32;
-    cmd_table->descriptor_entry[i].data_byte_count = (sector_count << 9) - 1;
-    cmd_table->descriptor_entry[i].interrupt_on_completition = 1;
+
+    //    Physical Region Descriptor Table Length
+    //    HBA uses this to know when to stop fetching PRDs. Each entry is 4 doublewords
+    //    so we need to divide sector_count / 16 (4 doublewords * 4 bytes/doubleword) to
+    //    know how many PRDs will be fetched. This can be 0 to 65,535 entries.
+    cmd_list->prdt_length = sector_count;
 
     hba_to_device *to_dev = reinterpret_cast<hba_to_device*>(&cmd_table->command_cfis);
-    SATA48_command(to_dev, command, lba, sector_count);
+    LBA48_command(to_dev, command, lba, cmd_list->prdt_length);
 
     port->command_issue = 1 << slot;
 
@@ -502,7 +520,7 @@ void ahci::ahci_controller::sata_execute(hba_port *port, uint16_t command,
     // https://github.com/haiku/haiku/blob/7f8f4c9c8c1d951b3fa1ad1b7315cf900c6b5fd6/src/add-ons/kernel/busses/scsi/ahci/ahci_port.cpp
 }
 
-void ahci::ahci_controller::sata_read(uint64_t lba, uint64_t sector_count, uintptr_t buffer)
+void ahci::ahci_controller::sata_read(size_t lba, uintptr_t buffer, size_t buffer_size)
 {
     auto port = sata_get_port();
     if (port == nullptr) {
@@ -511,10 +529,10 @@ void ahci::ahci_controller::sata_read(uint64_t lba, uint64_t sector_count, uintp
     }
 
     // 0x25 - Read DMA Ext
-    sata_execute(port, 0x25, lba, sector_count, buffer);
+    sata_execute(port, 0x25, lba, buffer, buffer_size);
 }
 
-void ahci::ahci_controller::sata_write(uint64_t lba, uint64_t sector_count, uintptr_t buffer)
+void ahci::ahci_controller::sata_write(size_t lba, uintptr_t buffer, size_t buffer_size)
 {
     auto port = sata_get_port();
     if (port == nullptr) {
@@ -523,7 +541,7 @@ void ahci::ahci_controller::sata_write(uint64_t lba, uint64_t sector_count, uint
     }
 
     // 0x35 - Write DMA Ext
-    sata_execute(port, 0x35, lba, sector_count, buffer);
+    sata_execute(port, 0x35, lba, buffer, buffer_size);
 }
 
 bool ahci::ahci_controller::wait_until(uint32_t reg, uint32_t port, bool cond, uint32_t time)

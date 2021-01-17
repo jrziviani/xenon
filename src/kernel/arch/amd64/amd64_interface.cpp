@@ -9,7 +9,6 @@
 #include "driver/amd64_timer.h"
 #include "driver/amd64_pci.h"
 #include "driver/amd64_keyboard.h"
-#include "driver/amd64_ide.h"
 
 #include <klib/new.h>
 
@@ -69,11 +68,6 @@ int amd64_interface::init_processes()
 keyboard *amd64_interface::create_keyboard()
 {
     return new amd64_keyboard();
-}
-
-ide *amd64_interface::create_ide()
-{
-    return new amd64_ide();
 }
 
 void amd64_interface::cpu_halt()

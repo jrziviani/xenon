@@ -1,6 +1,5 @@
 #include "ext2.h"
 #include "superblock.h"
-#include "inode.h"
 
 #include <config.h>
 #include <klib/logger.h>
@@ -10,7 +9,7 @@
 
 constexpr uint16_t EXT2_SIGNATURE = 0xef53;
 
-ext2::ext2(device_interface *device) :
+ext2::ext2(block_device &device) :
     device_(device)
 {
     /*
@@ -24,13 +23,15 @@ ext2::ext2(device_interface *device) :
     static_assert(sizeof(ext2fs::block_group_descriptor) == 32, "block group descriptor must be 32 bytes");
     static_assert(sizeof(ext2fs::inode) == 128, "inode struct must be 128 bytes");
 
-    auto superblk = new ext2fs::superblock;
-    auto controller_hack = static_cast<ahci::ahci_controller*>(device);
+    //auto superblk = new ext2fs::superblock;
+    //auto controller_hack = static_cast<ahci::ahci_controller*>(&device);
 
     // superblock is located at byte 1024 from the beginning of the volume and is exactly
     // 1024 bytes length. If disk uses 512-byte sectors, superblock begins at LBA 2 and
     // occupies sectors 2 and 3
-     controller_hack->sata_read(2, 32, reinterpret_cast<uintptr_t>(superblk) - KVIRTUAL_ADDRESS);
+     //controller_hack->sata_read(2, 32, reinterpret_cast<uintptr_t>(superblk) - KVIRTUAL_ADDRESS);
+    auto buffer = device.read(2, 1024);
+    auto superblk = reinterpret_cast<ext2fs::superblock*>(buffer.get());
 
     // make sure the device has a ext2 filesystem
     if (superblk->signature != EXT2_SIGNATURE) {
@@ -60,38 +61,33 @@ ext2::ext2(device_interface *device) :
 
      // block descriptor table is located after the superblock, so after the first 1024
      // bytes
-     auto block_descriptor = new ext2fs::block_group_descriptor;
      auto block_index = (2 - 1) / superblk->inodes_per_group;
      auto inode_index = (2 - 1) % superblk->inodes_per_group;
      auto start_lba = (block_size == 1_KB) ? 4 : 3;
-     controller_hack->sata_read(start_lba + block_index,
-                                sectors_per_block,
-                                reinterpret_cast<uintptr_t>(block_descriptor) - KVIRTUAL_ADDRESS);
+     auto buffer1 = device.read(start_lba + block_index, sizeof(ext2fs::block_group_descriptor));
+     auto block_descriptor = reinterpret_cast<ext2fs::block_group_descriptor*>(buffer1.get());
+
      // set the block_descriptor to the required index
-     block_descriptor += block_index * sizeof(ext2fs::block_group_descriptor);;
+     //block_descriptor += block_index * sizeof(ext2fs::block_group_descriptor);
 
      // the group that the inode belongs was found, now we need to to inode itself, now
      // we're going to locate the inode itself
      auto block = (inode_index * sizeof(ext2fs::inode)) / block_size;
-     auto inode = new ext2fs::inode;
-     controller_hack->sata_read(block_descriptor->inode_table_address * sectors_per_block,
-                                512,
-                                reinterpret_cast<uintptr_t>(inode) - KVIRTUAL_ADDRESS);
-     inode += inode_index;
-     klib::logger::instance().log("%d", (inode->type_permission & 0xf000) == 0x4000);
+     auto buffer2 = device.read(block_descriptor->inode_table_address * sectors_per_block,
+                                sizeof(ext2fs::inode) * sizeof(ext2fs::inode) / 512);
+     auto inode = reinterpret_cast<ext2fs::inode*>(buffer2.get());
+
+     klib::logger::instance().log("%d", (inode[inode_index].type_permission & 0xf000) == 0x4000);
 
      for (int i = 0; i < 12; i++) {
-        auto b = inode->direct_block_pointer[i];
+        auto b = inode[inode_index].direct_block_pointer[i];
         if (b == 0) {
             break;
         }
 
-
-        klib::unique_ptr<char[]> buffer = klib::make_unique<char[]>(static_cast<size_t>(1_KB));
-        auto dir = reinterpret_cast<ext2fs::directory_entry*>(buffer.get());
-        controller_hack->sata_read(b * sectors_per_block,
-                                   1,
-                                   reinterpret_cast<uintptr_t>(buffer.get()) - KVIRTUAL_ADDRESS);
+        // ext2 dir names cannot span to multiple blocks, so read the whole block
+        auto buffer3 = device.read(b * sectors_per_block, block_size);
+        auto dir = reinterpret_cast<ext2fs::directory_entry*>(buffer3.get());
 
         auto counter = block_size;
         while (counter > 0 && dir->inode != 0) {
@@ -101,4 +97,9 @@ ext2::ext2(device_interface *device) :
             dir = (ext2fs::directory_entry*)((uintptr_t)dir + dir->size);
         }
      }
+}
+
+void ext2::list_directory(const ext2fs::inode &inode)
+{
+
 }
