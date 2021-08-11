@@ -2,8 +2,8 @@
 
 set -e
 
-readonly BINUTILS_VERSION='2.35'
-readonly GCC_VERSION='10.2.0'
+readonly BINUTILS_VERSION='2.37'
+readonly GCC_VERSION='11.2.0'
 
 die() {
     printf "$1\n" >&2

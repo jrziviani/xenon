@@ -47,7 +47,7 @@ ext2::ext2(block_device &device) :
     }
 
      auto block_size = 1024 << superblk->block_size;
-     auto inodes_per_block = block_size / sizeof(ext2fs::inode);
+     //auto inodes_per_block = block_size / sizeof(ext2fs::inode);
      auto sectors_per_block = block_size / 512;
      /*
      klib::logger::instance().log("Block size: %d, Volume size: %d, Block groups: %d",
@@ -72,7 +72,7 @@ ext2::ext2(block_device &device) :
 
      // the group that the inode belongs was found, now we need to to inode itself, now
      // we're going to locate the inode itself
-     auto block = (inode_index * sizeof(ext2fs::inode)) / block_size;
+     //auto block = (inode_index * sizeof(ext2fs::inode)) / block_size;
      auto buffer2 = device.read(block_descriptor->inode_table_address * sectors_per_block,
                                 sizeof(ext2fs::inode) * sizeof(ext2fs::inode) / 512);
      auto inode = reinterpret_cast<ext2fs::inode*>(buffer2.get());
@@ -101,5 +101,5 @@ ext2::ext2(block_device &device) :
 
 void ext2::list_directory(const ext2fs::inode &inode)
 {
-
+    (void)inode;
 }
