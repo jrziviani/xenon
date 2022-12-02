@@ -23,3 +23,11 @@ Debugging the code with GDB is simple:
 
 It will launch QEMU in debug mode and start GDB in a new terminal:
 ![debug screenshot](pics/debug1.png)
+
+Dependencies
+------------
+- grub-common
+- grub-pc-bin
+- xorriso
+- libmpc-dev
+- libgmp3-dev
